@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
+@import "tailwindcss";
+@theme {
+    --font-display:"urbanist",sans-serif;
+    --breakpoint-3xl:1920px;
+    --color-primary:#ff9324;
+}
+@layer base{
+    html{
+        font-family: var(--font-display);
+    }
+    body{
+        background-color: #fcfbfc;
+        overflow-x: hidden;
+    }
+}
+.custom-scrollbar::-webkit-scrollbar{
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb{
+    background-color: rgba(100,100,100,0.4);
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-track{
+    background: transparent;
+
+}
+@layer utilities{
+    @keyframes text-shine {
+        0%{
+            background-position: 0% 50%;
+        }
+        100%{
+            background-position: 100% 50%;
+        }
+    }
+    .animate-text-shine{
+        animation: text-shine 3s ease-in-out infinite alternate;
+    }
+    @keyframes blob1 {
+        0%,100%{transform: translate(0px,0px) scale(1);}
+        33%{transform: translate(30px,-60px) scale(1.1);}
+        66%{transform: translate(-20px,20px) scale(0.9);} 
+    }
+      @keyframes blob2 {
+        0%,100%{transform: translate(0px,0px) scale(1);}
+        33%{transform: translate(-40px,60px) scale(1.05);}
+        66%{transform: translate(20px,-40px) scale(0.95);} 
+    }
+      @keyframes blob3 {
+        0%,100%{transform: translate(0px,0px) scale(1);}
+        33%{transform: translate(20px,140px) scale(1.15);}
+        66%{transform: translate(-30px,-30px) scale(0.85);} 
+    }
+    .animate-blob1{
+        animation: blob1 8s ease-in-out infinite;
+    }
+     .animate-blob2{
+        animation: blob2 10s ease-in-out infinite;
+    }
+     .animate-blob3{
+        animation: blob3 12s ease-in-out infinite;
+    }
+
+}
+.input-box{
+    @apply w-full flex justify-between gap-3 text-sm text-black bg-gray-50/50 rounded px-4 py-3 mb-4 mt-3 border-gray-100 outline-none focus-within:border-orange-300;
+}
+.btn-primary {
+  @apply w-full flex items-center justify-center gap-3 
+         text-sm font-medium text-white 
+         bg-black shadow-lg shadow-orange-600/5 
+         p-2.5 rounded-md my-1 
+         hover:bg-orange-600 hover:text-white    /* ← was orange-600/15 (5% opacity, invisible) */
+         disabled:opacity-50 disabled:cursor-not-allowed  /* ← add this for loading state */
+         cursor-pointer transition-colors;
+}
+
+.btn-small {
+  @apply flex items-center justify-center gap-3 
+         bg-linear-to-r from-[rgb(255,147,36)] to-[#e99a4b]   /* ← bg-linear-to-r is not valid, use bg-gradient-to-r */
+         text-sm font-semibold text-white 
+         px-7 py-2 rounded-lg 
+         hover:bg-black hover:text-white          /* note: gradient won't override cleanly, see below */
+         transition-colors cursor-pointer 
+         hover:shadow-2xl hover:shadow-orange-300;
+}
