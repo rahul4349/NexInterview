@@ -1,5 +1,5 @@
 const express = require("express");
-const { registerUser, loginUser, getUserProfile } = require("../controllers/authController");
+const { registerUser, loginUser, getUserProfile, sendOtp, resetPassword } = require("../controllers/authController");
 const { protect } = require("../middlewares/authMiddleware");
 const multer = require("multer");
 const path = require("path");
@@ -30,6 +30,8 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter });
 
 // Routes — defined AFTER upload
+router.post("/send-otp", sendOtp);
+router.post("/reset-password", resetPassword);
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/profile", protect, getUserProfile);

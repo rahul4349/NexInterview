@@ -5,8 +5,14 @@ const Modal = ({ children, isopen, onClose, title, hideheader }) => {
   if (!isopen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center items-center w-full h-full bg-black/50">
-      <div className="relative flex flex-col bg-white shadow-lg rounded-lg overflow-hidden">
+    <div 
+      className="fixed inset-0 z-50 flex justify-center items-center w-full h-full bg-black/50 cursor-pointer" 
+      onClick={onClose}
+    >
+      <div 
+        className="relative flex flex-col bg-white shadow-lg rounded-lg overflow-hidden cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
 
         {!hideheader && (
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
