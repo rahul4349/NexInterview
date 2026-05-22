@@ -119,7 +119,7 @@ const SgnUp = ({ setCurrentPage }) => {
 
       const { token, ...userData } = response.data;
 
-      localStorage.setItem("token", token);
+      sessionStorage.setItem("token", token);
       updateUser(userData);
 
       toast.success("Mobile number verified and account created successfully!");
@@ -142,22 +142,53 @@ const SgnUp = ({ setCurrentPage }) => {
 
   // Floating 3D Card Styling (Rich hover scaling and elevations)
   const card3DStyle = "w-[90vw] md:w-[33vw] p-8 flex flex-col justify-center bg-[#fffdf6] border border-amber-100/50 rounded-2xl shadow-[0_20px_40px_rgba(255,147,36,0.06),_0_0_0_1px_rgba(255,147,36,0.05),_inset_0_1px_2px_rgba(255,255,255,0.8)] hover:shadow-[0_30px_60px_rgba(255,147,36,0.12)] hover:-translate-y-1 hover:scale-[1.005] transition-all duration-300 relative overflow-hidden";
-  const btn3DStyle = "w-full flex items-center justify-center gap-3 text-sm font-bold text-white bg-gradient-to-r from-[#ff9324] to-[#e99a4b] px-5 py-3.5 rounded-xl border-b-4 border-[#c76e0a] hover:border-b-2 hover:translate-y-[2px] active:border-b-0 active:translate-y-[4px] transition-all duration-150 shadow-[0_8px_20px_rgba(255,147,36,0.2)] cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none disabled:translate-y-0 disabled:border-b-4";
+  const btn3DStyle = "w-full flex items-center justify-center gap-3 text-sm font-bold text-white bg-linear-to-r from-primary to-[#e99a4b] px-5 py-3.5 rounded-xl border-b-4 border-[#c76e0a] hover:border-b-2 hover:translate-y-[2px] active:border-b-0 active:translate-y-[4px] transition-all duration-150 shadow-[0_8px_20px_rgba(255,147,36,0.2)] cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none disabled:translate-y-0 disabled:border-b-4";
 
   // Decorative ambient glows inside the card
   const cardDecorations = (
     <>
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#ff9324]/15 to-transparent blur-xl pointer-events-none"></div>
-      <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-tr from-[#e99a4b]/8 to-transparent blur-xl pointer-events-none"></div>
-      <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#ff9324] to-[#e99a4b]"></div>
+      <div className="absolute top-0 right-0 w-24 h-24 bg-linear-to-br from-primary/15 to-transparent blur-xl pointer-events-none"></div>
+      <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-linear-to-tr from-[#e99a4b]/8 to-transparent blur-xl pointer-events-none"></div>
+      <div className="absolute top-0 left-0 w-full h-0.75 bg-linear-to-r from-primary to-[#e99a4b]"></div>
     </>
   );
+
+  const renderWrapper = (card) => {
+    if (!setCurrentPage) {
+      return (
+        <div className="w-full min-h-screen bg-[#fffcef] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+          <div className="w-96 h-96 bg-amber-200/20 blur-[80px] absolute -top-10 -left-10 rounded-full pointer-events-none"></div>
+          <div className="w-96 h-96 bg-rose-200/20 blur-[80px] absolute -bottom-10 -right-10 rounded-full pointer-events-none"></div>
+          
+          <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-20">
+            <div className="text-xl font-bold text-slate-800 cursor-pointer select-none" onClick={() => navigate("/")}>
+              NexInterview
+            </div>
+            <button 
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-slate-900 bg-white/60 hover:bg-white border border-slate-200/60 px-4 py-2 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.03)] cursor-pointer transition duration-200"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Home
+            </button>
+          </div>
+
+          <div className="z-10 mt-16 md:mt-0">
+            {card}
+          </div>
+        </div>
+      );
+    }
+    return card;
+  };
 
   // ----------------------------------------------------
   // FLOW A: OTP CODE VERIFICATION SCREEN
   // ----------------------------------------------------
   if (showOtpScreen) {
-    return (
+    return renderWrapper(
       <div className={card3DStyle}>
         {cardDecorations}
         <div className="text-center mb-6">
@@ -225,7 +256,7 @@ const SgnUp = ({ setCurrentPage }) => {
   // ----------------------------------------------------
   // FLOW B: DEFAULT SIGNUP FORM
   // ----------------------------------------------------
-  return (
+  return renderWrapper(
     <div className={card3DStyle}>
       {cardDecorations}
       <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">Create an Account</h3>
@@ -275,7 +306,13 @@ const SgnUp = ({ setCurrentPage }) => {
             <button
               type="button"
               className="font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer transition"
-              onClick={() => setCurrentPage("Login")}
+              onClick={() => {
+                if (setCurrentPage) {
+                  setCurrentPage("Login");
+                } else {
+                  navigate("/login");
+                }
+              }}
             >
               Login
             </button>

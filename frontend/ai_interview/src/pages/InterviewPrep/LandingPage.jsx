@@ -12,13 +12,8 @@ const LandingPage = () => {
   const [currentPage, setCurrentPage] = useState("Login");
 
   const handleCTA = () => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    navigate("/dashboard");  // ← if logged in go to dashboard
-  } else {
-    setOpenAuthModal(true);  // ← if not logged in open modal
-  }
-};
+    navigate("/login"); // ← always redirect directly to /login page
+  };
 
   return (
     <>
@@ -34,7 +29,9 @@ const LandingPage = () => {
 
             <button
               className="bg-linear-to-r from-[#ff9393] to-[#e99a4b] text-sm font-semibold text-white px-7 py-2.5 rounded-full hover:bg-black hover:text-white border border-white transition-colors cursor-pointer"
-              onClick={() => setOpenAuthModal(true)}
+              onClick={() => {
+                navigate("/login");
+              }}
             >
               Login / Sign Up
             </button>

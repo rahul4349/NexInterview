@@ -13,7 +13,7 @@ const axiosInstance = axios.create({
 // Automatically attach token to every request
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,9 +29,13 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       // Token expired or unauthorized
       if (error.response.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        window.location.href = "/";
+        // Do not redirect or clear session storage if it is an auth request
+        const isAuthRequest = error.config && error.config.url && error.config.url.includes("/api/auth/");
+        if (!isAuthRequest) {
+          sessionStorage.removeItem("token");
+          sessionStorage.removeItem("user");
+          window.location.href = "/";
+        }
       }
     }
     return Promise.reject(error);
