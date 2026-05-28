@@ -82,10 +82,21 @@ const InterviewPrep = () => {
   ];
 
   if (loading) return (
-    <div className="flex items-center justify-center h-screen bg-[#fffcef]">
-      <div className="text-center">
-        <div className="text-5xl mb-4">🤖</div>
-        <p className="text-slate-500">Loading your session...</p>
+    <div className="min-h-screen bg-[#fffcef]">
+      <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white">
+        <h1 className="text-xl font-bold text-black">NexInterview</h1>
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="text-sm text-slate-600 hover:underline cursor-pointer flex items-center gap-1"
+        >
+          ← Back
+        </button>
+      </div>
+      <div className="flex items-center justify-center h-[calc(100vh-80px)]">
+        <div className="text-center animate-pulse">
+          <div className="text-5xl mb-4">🤖</div>
+          <p className="text-slate-500 font-medium">Loading your session...</p>
+        </div>
       </div>
     </div>
   );
@@ -98,9 +109,9 @@ const InterviewPrep = () => {
         <h1 className="text-xl font-bold text-black">NexInterview</h1>
         <button
           onClick={() => navigate("/dashboard")}
-          className="text-sm text-slate-600 hover:underline cursor-pointer"
+          className="text-sm text-slate-600 hover:underline cursor-pointer flex items-center gap-1"
         >
-          ← Back to Dashboard
+          ← Back
         </button>
       </div>
 

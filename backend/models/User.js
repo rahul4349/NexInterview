@@ -25,6 +25,26 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    academicYear: {
+      type: String,
+      default: "2021-2023",
+    },
+    registrationNo: {
+      type: String,
+      default: "2124100001",
+    },
+    gender: {
+      type: String,
+      default: "Male",
+    },
+    bloodGroup: {
+      type: String,
+      default: "A+",
+    },
+    address: {
+      type: String,
+      default: "Near Khantapada High School, Khantapada, Balasore",
+    },
   },
   { timestamps: true }
 );

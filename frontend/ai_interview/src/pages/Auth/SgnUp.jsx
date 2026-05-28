@@ -11,6 +11,11 @@ const SgnUp = ({ setCurrentPage }) => {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [academicYear, setAcademicYear] = useState("");
+  const [registrationNo, setRegistrationNo] = useState("");
+  const [gender, setGender] = useState("");
+  const [bloodGroup, setBloodGroup] = useState("");
+  const [address, setAddress] = useState("");
   const [otp, setOtp] = useState("");
   const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -74,6 +79,26 @@ const SgnUp = ({ setCurrentPage }) => {
       toast.error("Password must be at least 6 characters.");
       return;
     }
+    if (!academicYear.trim()) {
+      toast.error("Please enter your academic year.");
+      return;
+    }
+    if (!registrationNo.trim()) {
+      toast.error("Please enter your registration number.");
+      return;
+    }
+    if (!gender.trim()) {
+      toast.error("Please enter your gender.");
+      return;
+    }
+    if (!bloodGroup.trim()) {
+      toast.error("Please enter your blood group.");
+      return;
+    }
+    if (!address.trim()) {
+      toast.error("Please enter your address.");
+      return;
+    }
 
     setLoading(true);
 
@@ -114,6 +139,11 @@ const SgnUp = ({ setCurrentPage }) => {
         email,
         phoneNumber,
         password,
+        academicYear,
+        registrationNo,
+        gender,
+        bloodGroup,
+        address,
         otp
       });
 
@@ -140,42 +170,19 @@ const SgnUp = ({ setCurrentPage }) => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // Floating 3D Card Styling (Rich hover scaling and elevations)
-  const card3DStyle = "w-[90vw] md:w-[33vw] p-8 flex flex-col justify-center bg-[#fffdf6] border border-amber-100/50 rounded-2xl shadow-[0_20px_40px_rgba(255,147,36,0.06),_0_0_0_1px_rgba(255,147,36,0.05),_inset_0_1px_2px_rgba(255,255,255,0.8)] hover:shadow-[0_30px_60px_rgba(255,147,36,0.12)] hover:-translate-y-1 hover:scale-[1.005] transition-all duration-300 relative overflow-hidden";
-  const btn3DStyle = "w-full flex items-center justify-center gap-3 text-sm font-bold text-white bg-linear-to-r from-primary to-[#e99a4b] px-5 py-3.5 rounded-xl border-b-4 border-[#c76e0a] hover:border-b-2 hover:translate-y-[2px] active:border-b-0 active:translate-y-[4px] transition-all duration-150 shadow-[0_8px_20px_rgba(255,147,36,0.2)] cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none disabled:translate-y-0 disabled:border-b-4";
-
-  // Decorative ambient glows inside the card
-  const cardDecorations = (
-    <>
-      <div className="absolute top-0 right-0 w-24 h-24 bg-linear-to-br from-primary/15 to-transparent blur-xl pointer-events-none"></div>
-      <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-linear-to-tr from-[#e99a4b]/8 to-transparent blur-xl pointer-events-none"></div>
-      <div className="absolute top-0 left-0 w-full h-0.75 bg-linear-to-r from-primary to-[#e99a4b]"></div>
-    </>
-  );
+  // Floating 3D Card Styling (Rich split pane layout matching screenshot)
+  const cardSplitStyle = "w-[90vw] md:w-[75vw] lg:w-[62vw] flex flex-col md:flex-row bg-white rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] relative overflow-hidden transition-all duration-300";
 
   const renderWrapper = (card) => {
     if (!setCurrentPage) {
       return (
-        <div className="w-full min-h-screen bg-[#fffcef] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-          <div className="w-96 h-96 bg-amber-200/20 blur-[80px] absolute -top-10 -left-10 rounded-full pointer-events-none"></div>
-          <div className="w-96 h-96 bg-rose-200/20 blur-[80px] absolute -bottom-10 -right-10 rounded-full pointer-events-none"></div>
+        <div className="w-full min-h-screen bg-[#a6c4bc] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+          {/* Abstract Yellow Top-Left Shape */}
+          <div className="w-[60vw] h-[60vw] md:w-[32rem] md:h-[32rem] bg-[#f5a623] rounded-full absolute -top-[30vw] -left-[30vw] md:-top-64 md:-left-64 pointer-events-none opacity-95"></div>
+          {/* Abstract Red Bottom-Right Shape */}
+          <div className="w-[60vw] h-[60vw] md:w-[32rem] md:h-[32rem] bg-[#d93c3c] rounded-full absolute -bottom-[30vw] -right-[30vw] md:-bottom-64 md:-right-64 pointer-events-none opacity-95"></div>
           
-          <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-20">
-            <div className="text-xl font-bold text-slate-800 cursor-pointer select-none" onClick={() => navigate("/")}>
-              NexInterview
-            </div>
-            <button 
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-slate-900 bg-white/60 hover:bg-white border border-slate-200/60 px-4 py-2 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.03)] cursor-pointer transition duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Home
-            </button>
-          </div>
-
-          <div className="z-10 mt-16 md:mt-0">
+          <div className="z-10 w-full flex justify-center">
             {card}
           </div>
         </div>
@@ -184,71 +191,110 @@ const SgnUp = ({ setCurrentPage }) => {
     return card;
   };
 
+  // Left Sidebar Muted Teal Section matching user screenshot
+  const renderLeftSidebar = () => (
+    <div className="w-full md:w-[38%] bg-[#51b29a] p-8 flex flex-col items-center justify-between text-center relative overflow-hidden shrink-0 min-h-[220px] md:min-h-[420px] rounded-t-3xl md:rounded-tr-none md:rounded-l-3xl">
+      {/* Abstract yellow glow */}
+      <div className="absolute -top-12 -left-12 w-24 h-24 bg-[#f5a623]/25 rounded-full blur-xl pointer-events-none" />
+      
+      {/* Welcome details */}
+      <div className="my-auto space-y-4 relative z-10">
+        <h2 className="text-2xl font-medium tracking-tight text-slate-800">
+          Welcome To
+        </h2>
+        <h1 className="text-3xl font-extrabold text-[#f5a623] tracking-wider uppercase drop-shadow-sm">
+          NEXINTERVIEW
+        </h1>
+        <p className="text-sm text-white font-medium leading-relaxed max-w-[200px] mx-auto">
+          Ai generated smart interview preparation
+        </p>
+      </div>
+
+      {/* Home button matching screenshot */}
+      <button
+        type="button"
+        onClick={() => navigate ? navigate("/") : (window.location.href = "/")}
+        className="bg-[#f0ad4e] hover:bg-[#e59b34] text-white text-xs font-bold px-8 py-2 rounded-full border-2 border-white shadow-[0_4px_12px_rgba(240,173,78,0.3)] transition transform hover:scale-[1.03] active:scale-95 z-10 uppercase mt-4 select-none cursor-pointer"
+      >
+        Home
+      </button>
+    </div>
+  );
+
   // ----------------------------------------------------
   // FLOW A: OTP CODE VERIFICATION SCREEN
   // ----------------------------------------------------
   if (showOtpScreen) {
     return renderWrapper(
-      <div className={card3DStyle}>
-        {cardDecorations}
-        <div className="text-center mb-6">
-          <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">Verify Your Number</h3>
-          <p className="text-sm text-slate-500 mt-2">
-            We've sent a 6-digit verification code to <br />
-            <strong className="text-slate-800 break-all">{phoneNumber}</strong>
-          </p>
-        </div>
-
-        <form onSubmit={handleSgnUp} className="space-y-4">
-          <div className="flex flex-col items-center">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Enter 6-Digit Code
-            </label>
-            <input
-              type="text"
-              maxLength="6"
-              value={otp}
-              onChange={({ target }) => setOtp(target.value.replace(/\D/g, ''))}
-              placeholder="000000"
-              className="w-full text-center text-3xl font-extrabold py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none tracking-[0.5em] pl-[0.5em] bg-slate-50 placeholder-slate-300 transition duration-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
-              disabled={loading}
-              autoFocus
-            />
+      <div className={cardSplitStyle}>
+        {renderLeftSidebar()}
+        
+        {/* Right Form Pane */}
+        <div className="flex-1 bg-white p-8 flex flex-col justify-center relative">
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-medium text-slate-800 tracking-tight">Verify Your Number</h2>
+            <p className="text-xs text-slate-400 mt-2 font-medium tracking-wide">
+              Code sent to: <strong className="text-slate-700 break-all">{phoneNumber}</strong>
+            </p>
           </div>
 
-          <button type="submit" className={btn3DStyle} disabled={loading}>
-            {loading ? "Verifying..." : "VERIFY & SIGN UP"}
-          </button>
+          <form onSubmit={handleSgnUp} className="space-y-4">
+            <div className="flex flex-col items-center">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Enter 6-Digit Code
+              </label>
+              <input
+                type="text"
+                maxLength="6"
+                value={otp}
+                onChange={({ target }) => setOtp(target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="w-full text-center text-2xl font-extrabold py-1.5 border-2 border-slate-200 rounded-xl focus:border-[#51b29a] focus:outline-none tracking-[0.5em] pl-[0.5em] bg-slate-50 placeholder-slate-300 transition duration-200"
+                disabled={loading}
+                autoFocus
+              />
+            </div>
 
-          <div className="text-center mt-4">
-            {resendTimer > 0 ? (
-              <p className="text-xs text-slate-500">
-                Resend code in <span className="font-semibold text-slate-800">{formatTime(resendTimer)}</span>
-              </p>
-            ) : (
+            <div className="flex flex-col items-center pt-2">
               <button
-                type="button"
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer transition"
-                onClick={() => handleRequestOtp()}
+                type="submit"
+                className="bg-[#51b29a] hover:bg-[#409b84] text-white text-sm font-bold px-8 py-2.5 rounded-full cursor-pointer shadow-[0_4px_12px_rgba(81,178,154,0.3)] transition transform hover:scale-105 active:scale-95 disabled:opacity-50 select-none uppercase tracking-wide"
                 disabled={loading}
               >
-                Resend Verification Code
+                {loading ? "Verifying..." : "Verify & Sign Up"}
               </button>
-            )}
-          </div>
+            </div>
 
-          <button
-            type="button"
-            className="w-full text-xs font-medium text-slate-500 hover:text-slate-800 mt-2 text-center"
-            onClick={() => {
-              setShowOtpScreen(false);
-              setOtp("");
-            }}
-            disabled={loading}
-          >
-            ← Back to edit details
-          </button>
-        </form>
+            <div className="text-center mt-4">
+              {resendTimer > 0 ? (
+                <p className="text-xs text-slate-500">
+                  Resend code in <span className="font-semibold text-slate-800">{formatTime(resendTimer)}</span>
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer transition"
+                  onClick={() => handleRequestOtp()}
+                  disabled={loading}
+                >
+                  Resend Verification Code
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="w-full text-xs font-medium text-slate-400 hover:text-slate-700 mt-2 text-center"
+              onClick={() => {
+                setShowOtpScreen(false);
+                setOtp("");
+              }}
+              disabled={loading}
+            >
+              ← Back to edit details
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
@@ -257,68 +303,157 @@ const SgnUp = ({ setCurrentPage }) => {
   // FLOW B: DEFAULT SIGNUP FORM
   // ----------------------------------------------------
   return renderWrapper(
-    <div className={card3DStyle}>
-      {cardDecorations}
-      <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">Create an Account</h3>
-      <p className="text-xs text-slate-600 mt-2 mb-6">Enter your details below to get started</p>
-
-      <form onSubmit={handleRequestOtp}>
-        <div className="grid grid-cols-1 gap-2">
-          <Input
-            value={name}
-            onChange={({ target }) => setName(target.value)}
-            label="Full Name"
-            placeholder="Name"
-            type="text"
-            disabled={loading}
-          />
-          <Input
-            value={email}
-            onChange={({ target }) => setEmail(target.value)}
-            label="Email Address"
-            placeholder="name@gmail.com"
-            type="text"
-            disabled={loading}
-          />
-          <Input
-            value={phoneNumber}
-            onChange={({ target }) => setPhoneNumber(target.value)}
-            label="Mobile Number"
-            placeholder="+91XXXXXXXXXX"
-            type="text"
-            disabled={loading}
-          />
-          <Input
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
-            label="Password"
-            placeholder="min 6 characters"
-            type="password"
-            disabled={loading}
-          />
-
-          <button type="submit" className={`${btn3DStyle} mt-4`} disabled={loading}>
-            {loading ? "Sending verification code..." : "CONTINUE & SEND OTP"}
-          </button>
-
-          <p className="text-[13px] text-slate-600 mt-4 text-center">
-            Already have an account?{" "}
-            <button
-              type="button"
-              className="font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer transition"
-              onClick={() => {
-                if (setCurrentPage) {
-                  setCurrentPage("Login");
-                } else {
-                  navigate("/login");
-                }
-              }}
-            >
-              Login
-            </button>
-          </p>
+    <div className={cardSplitStyle}>
+      {renderLeftSidebar()}
+      
+      {/* Right Form Pane */}
+      <div className="flex-1 bg-white p-8 flex flex-col justify-center relative overflow-y-auto max-h-[90vh] custom-scrollbar py-6">
+        <div className="text-center mb-4">
+          <h2 className="text-3xl font-medium text-slate-800 tracking-tight">Create an Account</h2>
+          <p className="text-xs text-slate-400 mt-1 font-medium tracking-wide">Enter your details below to get started</p>
         </div>
-      </form>
+
+        <form onSubmit={handleRequestOtp}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-2">
+            <div className="md:col-span-2">
+              <Input
+                value={name}
+                onChange={({ target }) => setName(target.value)}
+                label="Full Name"
+                placeholder=""
+                type="text"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Input
+                value={email}
+                onChange={({ target }) => setEmail(target.value)}
+                label="Email Address"
+                placeholder="name@gmail.com"
+                type="text"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Input
+                value={phoneNumber}
+                onChange={({ target }) => setPhoneNumber(target.value)}
+                label="Mobile Number"
+                placeholder="+91XXXXXXXXXX"
+                type="text"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Input
+                value={password}
+                onChange={({ target }) => setPassword(target.value)}
+                label="Password"
+                placeholder=""
+                type="password"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Input
+                value={academicYear}
+                onChange={({ target }) => setAcademicYear(target.value)}
+                label="Academic Year"
+                placeholder=""
+                type="text"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Input
+                value={registrationNo}
+                onChange={({ target }) => setRegistrationNo(target.value)}
+                label="Registration No."
+                placeholder=""
+                type="text"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Gender</label>
+              <div className="input-box">
+                <select
+                  value={gender}
+                  onChange={({ target }) => setGender(target.value)}
+                  disabled={loading}
+                  className="w-full bg-transparent outline-none cursor-pointer text-slate-700 text-sm"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Blood Group</label>
+              <div className="input-box">
+                <select
+                  value={bloodGroup}
+                  onChange={({ target }) => setBloodGroup(target.value)}
+                  disabled={loading}
+                  className="w-full bg-transparent outline-none cursor-pointer text-slate-700 text-sm"
+                >
+                  <option value="">Select Blood Group</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+            </div>
+            <div className="md:col-span-2">
+              <Input
+                value={address}
+                onChange={({ target }) => setAddress(target.value)}
+                label="Address"
+                placeholder=""
+                type="text"
+                disabled={loading}
+              />
+            </div>
+
+            <div className="md:col-span-2 flex flex-col items-center pt-3">
+              <button
+                type="submit"
+                className="bg-[#51b29a] hover:bg-[#409b84] text-white text-sm font-bold px-8 py-2.5 rounded-full cursor-pointer shadow-[0_4px_12px_rgba(81,178,154,0.3)] transition transform hover:scale-105 active:scale-95 disabled:opacity-50 select-none uppercase tracking-wide"
+                disabled={loading}
+              >
+                {loading ? "Sending Code..." : "Continue & Send OTP"}
+              </button>
+            </div>
+
+            <div className="md:col-span-2">
+              <p className="text-xs text-slate-500 mt-4 text-center">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className="font-bold text-[#51b29a] hover:text-[#409b84] underline cursor-pointer transition"
+                  onClick={() => {
+                    if (setCurrentPage) {
+                      setCurrentPage("Login");
+                    } else {
+                      navigate("/login");
+                    }
+                  }}
+                >
+                  Login
+                </button>
+              </p>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

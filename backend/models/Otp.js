@@ -2,9 +2,12 @@ const mongoose = require("mongoose");
 
 const otpSchema = new mongoose.Schema(
   {
+    email: {
+      type: String,
+      trim: true,
+    },
     phoneNumber: {
       type: String,
-      required: true,
       trim: true,
     },
     otp: {
@@ -19,7 +22,8 @@ const otpSchema = new mongoose.Schema(
   }
 );
 
-// Add an index to query quickly by phone number and OTP
+// Add indexes to query quickly
+otpSchema.index({ email: 1, otp: 1 });
 otpSchema.index({ phoneNumber: 1, otp: 1 });
 
 module.exports = mongoose.model("Otp", otpSchema);
