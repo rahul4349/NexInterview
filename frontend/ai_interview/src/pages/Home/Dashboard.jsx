@@ -276,7 +276,7 @@ const Dashboard = () => {
     try {
       const res = await axiosInstance.get(API_PATHS.SESSION.GET_ALL);
       setSessions(res.data);
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch sessions.");
     } finally {
       setLoading(false);
@@ -284,7 +284,10 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchSessions();
+    const timer = setTimeout(() => {
+      fetchSessions();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleCreateSession = async (e) => {
@@ -332,7 +335,7 @@ const Dashboard = () => {
       await axiosInstance.delete(API_PATHS.SESSION.DELETE(id));
       setSessions(sessions.filter((s) => s._id !== id));
       toast.success("Session deleted successfully!");
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete session.");
     }
   };
