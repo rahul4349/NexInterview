@@ -2,7 +2,8 @@ const Groq = require("groq-sdk");
 const { generateQuestionsPrompt, conceptExplainPrompt } = require("../utils/prompts");
 const { getFallbackQuestions } = require("../utils/fallbacks");
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const apiKey = process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== "your_groq_api_key" ? process.env.GROQ_API_KEY : "dummy_groq_api_key";
+const groq = new Groq({ apiKey });
 
 const generateInterviewQuestions = async (req, res) => {
   try {
