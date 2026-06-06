@@ -1,11 +1,12 @@
 const Groq = require("groq-sdk");
 const { generateQuestionsPrompt, conceptExplainPrompt } = require("../utils/prompts");
+const { getFallbackQuestions } = require("../utils/fallbacks");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const generateInterviewQuestions = async (req, res) => {
   try {
-    const { role, experience, tpoicToFocus, description } = req.body;  // ← tpoicToFocus
+    const { role, experience, tpoicToFocus, description } = req.body;
 
     console.log("Body:", req.body);
 
@@ -13,17 +14,28 @@ const generateInterviewQuestions = async (req, res) => {
       return res.status(400).json({ message: "Role, experience and topics are required." });
     }
 
-    const prompt = generateQuestionsPrompt(role, experience, tpoicToFocus, description);
+    let questions;
+    try {
+      const prompt = generateQuestionsPrompt(role, experience, tpoicToFocus, description);
 
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.7,
-    });
+      const completion = await groq.chat.completions.create({
+        messages: [{ role: "user", content: prompt }],
+        model: "llama-3.3-70b-versatile",
+        temperature: 0.7,
+      });
 
-    const responseText = completion.choices[0].message.content;
-    const cleanedResponse = responseText.replace(/```json|```/g, "").trim();
-    const questions = JSON.parse(cleanedResponse);
+      const responseText = completion.choices[0].message.content;
+      const startIndex = responseText.indexOf("[");
+      const endIndex = responseText.lastIndexOf("]");
+      if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) {
+        throw new Error("No JSON array found in completion content.");
+      }
+      const jsonString = responseText.substring(startIndex, endIndex + 1);
+      questions = JSON.parse(jsonString);
+    } catch (apiError) {
+      console.warn("Groq API failed, using fallback questions:", apiError.message);
+      questions = getFallbackQuestions(role, experience, tpoicToFocus);
+    }
 
     res.status(200).json({ questions });
 

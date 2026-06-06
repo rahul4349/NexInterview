@@ -145,7 +145,7 @@ const sendOtp = async (req, res) => {
  */
 const registerUser = async (req, res) => {
   try {
-    const { name, email, phoneNumber, password, profileImageUrl, academicYear, registrationNo, gender, bloodGroup, address, otp } = req.body;
+    const { name, email, phoneNumber, password, profileImageUrl, dateOfBirth, gender, address, otp } = req.body;
 
     console.log("Register body:", req.body);
 
@@ -188,10 +188,8 @@ const registerUser = async (req, res) => {
       phoneNumber,
       password: hashedPassword,
       profileImageUrl: profileImageUrl || null,
-      academicYear: academicYear || "2021-2023",
-      registrationNo: registrationNo || "2124100001",
+      dateOfBirth: dateOfBirth || "",
       gender: gender || "Male",
-      bloodGroup: bloodGroup || "A+",
       address: address || "Near Khantapada High School, Khantapada, Balasore",
     });
 
@@ -201,10 +199,8 @@ const registerUser = async (req, res) => {
       email: user.email,
       phoneNumber: user.phoneNumber,
       profileImageUrl: user.profileImageUrl,
-      academicYear: user.academicYear,
-      registrationNo: user.registrationNo,
+      dateOfBirth: user.dateOfBirth,
       gender: user.gender,
-      bloodGroup: user.bloodGroup,
       address: user.address,
       token: generateToken(user._id),
     });
@@ -214,6 +210,7 @@ const registerUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 /**
  * @desc    Login user & acquire token (Allows Email OR Mobile Number)
@@ -256,10 +253,8 @@ const loginUser = async (req, res) => {
       email: user.email,
       phoneNumber: user.phoneNumber,
       profileImageUrl: user.profileImageUrl,
-      academicYear: user.academicYear,
-      registrationNo: user.registrationNo,
+      dateOfBirth: user.dateOfBirth,
       gender: user.gender,
-      bloodGroup: user.bloodGroup,
       address: user.address,
       token: generateToken(user._id),
     });
@@ -380,26 +375,11 @@ const requestProfileUpdateOtp = async (req, res) => {
     // Store the new OTP
     await Otp.create({ email: user.email, otp: generatedOtp });
 
-    // Dispatch the email
-    const info = await sendEmail({
-      to: user.email,
-      subject: "NexInterview - Profile Update Verification Code",
-      text: `Hello ${user.name},\n\nYou requested to update your profile settings. Your 6-digit verification code is: ${generatedOtp}.\n\nThis code expires in 5 minutes.\n\nBest regards,\nNexInterview Team`,
-      html: `<div style="font-family: 'Outfit', sans-serif; padding: 20px; background-color: #fafafa; border-radius: 12px; max-width: 600px; border: 1px solid #e2e8f0;">
-              <h2 style="color: #0f172a; margin-bottom: 10px;">NexInterview AI Platform</h2>
-              <p style="color: #475569; font-size: 14px; line-height: 1.5;">Hello <strong>${user.name}</strong>,</p>
-              <p style="color: #475569; font-size: 14px; line-height: 1.5;">You requested to update your profile settings. Your 6-digit verification code is:</p>
-              <div style="background-color: #f1f5f9; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                <span style="font-size: 32px; font-weight: 800; color: #4f46e5; letter-spacing: 0.25em;">${generatedOtp}</span>
-              </div>
-              <p style="color: #94a3b8; font-size: 12px; margin-top: 20px;">This code will automatically expire in 5 minutes for security reasons.</p>
-              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-              <p style="color: #64748b; font-size: 12px;">Best regards,<br /><strong>NexInterview Team</strong></p>
-            </div>`
-    });
+    // Dispatch SMS to the user's mobile phone number
+    const info = await sendSms(user.phoneNumber, generatedOtp);
 
     res.status(200).json({
-      message: "Verification code sent successfully to your registered email address.",
+      message: "Verification code sent successfully to your registered mobile number.",
       mock: !!info.mock,
     });
 
@@ -416,7 +396,7 @@ const requestProfileUpdateOtp = async (req, res) => {
  */
 const updateUserProfile = async (req, res) => {
   try {
-    const { name, email, phoneNumber, profileImageUrl, academicYear, registrationNo, gender, bloodGroup, address, otp } = req.body;
+    const { name, email, phoneNumber, profileImageUrl, dateOfBirth, gender, address, password, otp } = req.body;
 
     if (!name || !email || !phoneNumber || !otp) {
       return res.status(400).json({ message: "Name, Email, Mobile number, and verification OTP are required." });
@@ -458,11 +438,17 @@ const updateUserProfile = async (req, res) => {
     if (profileImageUrl !== undefined) {
       user.profileImageUrl = profileImageUrl;
     }
-    if (academicYear !== undefined) user.academicYear = academicYear.trim();
-    if (registrationNo !== undefined) user.registrationNo = registrationNo.trim();
+    if (dateOfBirth !== undefined) user.dateOfBirth = dateOfBirth.trim();
     if (gender !== undefined) user.gender = gender.trim();
-    if (bloodGroup !== undefined) user.bloodGroup = bloodGroup.trim();
     if (address !== undefined) user.address = address.trim();
+
+    if (password) {
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters." });
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
 
     await user.save();
 
@@ -473,15 +459,95 @@ const updateUserProfile = async (req, res) => {
       email: user.email,
       phoneNumber: user.phoneNumber,
       profileImageUrl: user.profileImageUrl,
-      academicYear: user.academicYear,
-      registrationNo: user.registrationNo,
+      dateOfBirth: user.dateOfBirth,
       gender: user.gender,
-      bloodGroup: user.bloodGroup,
       address: user.address,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc    Request Account Deactivation OTP code (Sent to registered mobile number)
+ * @route   POST /api/auth/profile/deactivate-otp
+ * @access  Private
+ */
+const requestDeactivateOtp = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (!user.phoneNumber) {
+      return res.status(400).json({ message: "No registered mobile phone number found for this user." });
+    }
+
+    // Generate secure 6-digit OTP code
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Clear previous OTP entries for this phoneNumber
+    await Otp.deleteMany({ phoneNumber: user.phoneNumber });
+
+    // Store the new OTP
+    await Otp.create({ phoneNumber: user.phoneNumber, otp: generatedOtp });
+
+    // Dispatch the SMS
+    const info = await sendSms(user.phoneNumber, generatedOtp);
+
+    res.status(200).json({
+      message: `Verification code sent successfully to your registered mobile number ${user.phoneNumber.slice(0, -4)}XXXX.`,
+      mock: !!info.mock,
     });
 
   } catch (error) {
-    console.error("Update profile error:", error.message);
+    console.error("Deactivation OTP request error:", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc    Deactivate User Account (Verify Password & Mobile OTP)
+ * @route   DELETE /api/auth/profile/deactivate
+ * @access  Private
+ */
+const deactivateUserProfile = async (req, res) => {
+  try {
+    const { password, otp } = req.body;
+
+    if (!password || !otp) {
+      return res.status(400).json({ message: "Password and verification OTP are required." });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // 1. Verify password
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({ message: "Incorrect password." });
+    }
+
+    // 2. Verify OTP code against current user phone number
+    const otpRecord = await Otp.findOne({ phoneNumber: user.phoneNumber, otp });
+    if (!otpRecord) {
+      return res.status(400).json({ message: "Invalid or expired verification code." });
+    }
+
+    // 3. Clear OTP logs for this user phone
+    await Otp.deleteMany({ phoneNumber: user.phoneNumber });
+
+    // 4. Delete the User permanently from MongoDB
+    await User.findByIdAndDelete(req.user.id);
+
+    res.status(200).json({ message: "Your account has been successfully deactivated and deleted." });
+
+  } catch (error) {
+    console.error("Deactivate account error:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -493,5 +559,7 @@ module.exports = {
   resetPassword, 
   getUserProfile,
   requestProfileUpdateOtp,
-  updateUserProfile
+  updateUserProfile,
+  requestDeactivateOtp,
+  deactivateUserProfile
 };

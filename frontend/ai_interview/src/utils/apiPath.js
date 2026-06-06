@@ -10,6 +10,8 @@ export const API_PATHS = {
     RESET_PASSWORD: "/api/auth/reset-password",
     REQUEST_PROFILE_UPDATE_OTP: "/api/auth/profile/update-otp",
     UPDATE_PROFILE: "/api/auth/profile/update",
+    REQUEST_DEACTIVATE_OTP: "/api/auth/profile/deactivate-otp",
+    DEACTIVATE_ACCOUNT: "/api/auth/profile/deactivate",
   },
   SESSION: {
     CREATE: "/api/sessions/create",

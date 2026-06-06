@@ -17,7 +17,7 @@ const LandingPage = () => {
 
   return (
     <>
-      <div className="w-full min-h-screen bg-[#fffcef] relative overflow-hidden">
+      <div className="w-full min-h-screen bg-transparent relative overflow-hidden">
 
         {/* Subtle decorative top-left glow */}
         <div className="w-96 h-96 bg-amber-200/20 rounded-full blur-[90px] absolute -top-20 -left-20 pointer-events-none"></div>
@@ -75,7 +75,7 @@ const LandingPage = () => {
       </div>
 
       {/* Features Section */}
-      <div className="w-full bg-[#fffcef] pb-24">
+      <div className="w-full bg-transparent pb-24">
         <div className="container mx-auto px-6 max-w-6xl">
           <section>
             <h2 className="text-2xl md:text-3xl font-normal text-center text-[#0f172a] mb-12 tracking-tight">
@@ -88,7 +88,7 @@ const LandingPage = () => {
                 {APP_FEATURES.slice(0, 3).map((feature) => (
                   <div
                     key={feature.id}
-                    className="bg-[#fffef8] p-7 rounded-xl shadow-[0_10px_35px_rgba(253,230,138,0.06)] hover:shadow-[0_15px_40px_rgba(253,230,138,0.15)] hover:-translate-y-1 transition-all duration-300 border border-amber-100/50"
+                    className="bg-[#fffef8] p-7 rounded-xl shadow-[0_10px_35px_rgba(253,230,138,0.06)] hover:shadow-[0_15px_40px_rgba(253,230,138,0.15)] hover:-translate-y-1 transition-all duration-300 border border-slate-800"
                   >
                     <h3 className="text-base font-semibold text-[#0f172a] mb-3">
                       {feature.title}
@@ -105,7 +105,7 @@ const LandingPage = () => {
                 {APP_FEATURES.slice(3).map((feature) => (
                   <div
                     key={feature.id}
-                    className="bg-[#fffef8] p-7 rounded-xl shadow-[0_10px_35px_rgba(253,230,138,0.06)] hover:shadow-[0_15px_40px_rgba(253,230,138,0.15)] hover:-translate-y-1 transition-all duration-300 border border-amber-100/50"
+                    className="bg-[#fffef8] p-7 rounded-xl shadow-[0_10px_35px_rgba(253,230,138,0.06)] hover:shadow-[0_15px_40px_rgba(253,230,138,0.15)] hover:-translate-y-1 transition-all duration-300 border border-slate-800"
                   >
                     <h3 className="text-base font-semibold text-[#0f172a] mb-3">
                       {feature.title}

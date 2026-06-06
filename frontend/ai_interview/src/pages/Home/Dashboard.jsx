@@ -57,19 +57,27 @@ const Dashboard = () => {
   const [profileEmail, setProfileEmail] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
   const [profileImageUrl, setProfileImageUrl] = useState("");
-  const [profileAcademicYear, setProfileAcademicYear] = useState("");
-  const [profileRegNo, setProfileRegNo] = useState("");
+  const [profileDateOfBirth, setProfileDateOfBirth] = useState("");
   const [profileGender, setProfileGender] = useState("");
-  const [profileBloodGroup, setProfileBloodGroup] = useState("");
   const [profileAddress, setProfileAddress] = useState("");
+  const [profilePassword, setProfilePassword] = useState("");
+  const [profileConfirmPassword, setProfileConfirmPassword] = useState("");
   const [profileOtp, setProfileOtp] = useState("");
   const [profileFlow, setProfileFlow] = useState("edit"); // "edit" or "otp"
   const [profileTimer, setProfileTimer] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Deactivation states
+  const [deactivatePassword, setDeactivatePassword] = useState("");
+  const [deactivateOtp, setDeactivateOtp] = useState("");
+  const [showDeactivatePassword, setShowDeactivatePassword] = useState(false);
+  const [deactivateTimer, setDeactivateTimer] = useState(0);
+  const [deactivating, setDeactivating] = useState(false);
+
   const fileInputRef = React.useRef(null);
   const profileTimerRef = React.useRef(null);
+  const deactivateTimerRef = React.useRef(null);
 
   // Countdown timer logic for Profile Update verification code
   useEffect(() => {
@@ -89,16 +97,34 @@ const Dashboard = () => {
     };
   }, [profileTimer]);
 
+  // Countdown timer logic for Account Deactivation
+  useEffect(() => {
+    if (deactivateTimer > 0) {
+      deactivateTimerRef.current = setInterval(() => {
+        setDeactivateTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(deactivateTimerRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (deactivateTimerRef.current) clearInterval(deactivateTimerRef.current);
+    };
+  }, [deactivateTimer]);
+
   const handleOpenProfile = () => {
     setProfileName(user?.name || "");
     setProfileEmail(user?.email || "");
     setProfilePhone(user?.phoneNumber || "");
     setProfileImageUrl(user?.profileImageUrl || "");
-    setProfileAcademicYear(user?.academicYear || "2021-2023");
-    setProfileRegNo(user?.registrationNo || "2124100001");
+    setProfileDateOfBirth(user?.dateOfBirth || "");
     setProfileGender(user?.gender || "Male");
-    setProfileBloodGroup(user?.bloodGroup || "A+");
     setProfileAddress(user?.address || "Near Khantapada High School, Khantapada, Balasore");
+    setProfilePassword("");
+    setProfileConfirmPassword("");
     setProfileOtp("");
     setProfileFlow("edit");
     setProfileTimer(0);
@@ -109,15 +135,26 @@ const Dashboard = () => {
   const handleRequestUpdateOtp = async (e) => {
     if (e) e.preventDefault();
 
-    if (!profileName.trim() || !profileEmail.trim() || !profilePhone.trim() || !profileAcademicYear.trim() || !profileRegNo.trim() || !profileGender.trim() || !profileBloodGroup.trim() || !profileAddress.trim()) {
+    if (!profileName.trim() || !profileEmail.trim() || !profilePhone.trim() || !profileDateOfBirth.trim() || !profileGender.trim() || !profileAddress.trim()) {
       toast.error("Please fill all profile fields.");
       return;
+    }
+
+    if (profilePassword) {
+      if (profilePassword.length < 6) {
+        toast.error("New password must be at least 6 characters.");
+        return;
+      }
+      if (profilePassword !== profileConfirmPassword) {
+        toast.error("New passwords do not match.");
+        return;
+      }
     }
 
     setSaving(true);
     try {
       await axiosInstance.post(API_PATHS.AUTH.REQUEST_PROFILE_UPDATE_OTP);
-      toast.success("Verification code sent to your registered email!");
+      toast.success("Verification code sent to your registered mobile number!");
       setProfileFlow("otp");
       setProfileTimer(60);
     } catch (err) {
@@ -143,12 +180,11 @@ const Dashboard = () => {
         email: profileEmail,
         phoneNumber: profilePhone,
         profileImageUrl: profileImageUrl,
-        academicYear: profileAcademicYear,
-        registrationNo: profileRegNo,
+        dateOfBirth: profileDateOfBirth,
         gender: profileGender,
-        bloodGroup: profileBloodGroup,
         address: profileAddress,
-        otp: profileOtp
+        otp: profileOtp,
+        password: profilePassword ? profilePassword : undefined
       });
 
       updateUser(res.data);
@@ -180,6 +216,58 @@ const Dashboard = () => {
       toast.error(err.response?.data?.message || "Failed to upload profile picture.");
     } finally {
       setUploading(false);
+    }
+  };
+
+  // Request Deactivation OTP
+  const handleRequestDeactivateOtp = async () => {
+    setDeactivating(true);
+    try {
+      await axiosInstance.post(API_PATHS.AUTH.REQUEST_DEACTIVATE_OTP);
+      toast.success("Verification code sent to your registered mobile number!");
+      setDeactivateTimer(60);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send verification code.");
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
+  // Confirm Account Deactivation
+  const handleConfirmDeactivate = async (e) => {
+    if (e) e.preventDefault();
+
+    if (!deactivatePassword) {
+      toast.error("Please enter your password.");
+      return;
+    }
+
+    if (!deactivateOtp || deactivateOtp.length !== 6 || isNaN(deactivateOtp)) {
+      toast.error("Please enter the 6-digit verification code.");
+      return;
+    }
+
+    const confirmText = "DELETE MY ACCOUNT";
+    const userPrompt = window.prompt(`This action is permanent and cannot be undone. To confirm, type "${confirmText}" in the field below:`);
+
+    if (userPrompt !== confirmText) {
+      toast.error("Deactivation cancelled. Confirmation text did not match.");
+      return;
+    }
+
+    setDeactivating(true);
+    try {
+      await axiosInstance.delete(API_PATHS.AUTH.DEACTIVATE_ACCOUNT, {
+        data: { password: deactivatePassword, otp: deactivateOtp }
+      });
+      toast.success("Your account has been deactivated successfully.");
+      setShowProfileModal(false);
+      clearUser();
+      navigate("/");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Deactivation failed. Please check your credentials.");
+    } finally {
+      setDeactivating(false);
     }
   };
 
@@ -257,11 +345,11 @@ const Dashboard = () => {
 
   if (showProfileModal) {
     return (
-      <div className="fixed inset-0 bg-[#0c2333] z-50 overflow-y-auto flex flex-col items-center justify-start py-8 px-4 relative select-text">
-        {/* Abstract Top-Left Accent */}
-        <div className="absolute top-0 left-0 w-48 h-16 bg-[#209fa6]/25 -skew-y-12 origin-top-left transform pointer-events-none" />
-        {/* Abstract Bottom-Right Accent */}
-        <div className="absolute bottom-0 right-0 w-64 h-32 bg-[#209fa6]/25 skew-y-12 origin-bottom-right transform pointer-events-none" />
+      <div className="fixed inset-0 bg-[#a6c4bc] z-50 overflow-y-auto flex flex-col items-center justify-start py-8 px-4 relative select-text">
+        {/* Abstract Yellow Top-Left Shape */}
+        <div className="w-[60vw] h-[60vw] md:w-[32rem] md:h-[32rem] bg-[#f5a623] rounded-full absolute -top-[30vw] -left-[30vw] md:-top-64 md:-left-64 pointer-events-none opacity-95"></div>
+        {/* Abstract Red Bottom-Right Shape */}
+        <div className="w-[60vw] h-[60vw] md:w-[32rem] md:h-[32rem] bg-[#d93c3c] rounded-full absolute -bottom-[30vw] -right-[30vw] md:-bottom-64 md:-right-64 pointer-events-none opacity-95"></div>
 
         {/* Profile Page Header */}
         <div className="w-full max-w-5xl flex items-center justify-between mb-6 relative z-10 px-4 md:px-0">
@@ -277,7 +365,7 @@ const Dashboard = () => {
         </div>
 
         {/* Main White Content Card Frame */}
-        <div className="w-full max-w-5xl bg-[#f0f2f5] rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex overflow-hidden border border-slate-200 relative z-10">
+        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.2)] flex overflow-hidden border border-slate-200 relative z-10">
           
           {/* 1. Left Narrow Charcoal Sidebar */}
           <div className="w-14 bg-[#232d37] flex flex-col items-center py-5 justify-between shrink-0 select-none">
@@ -288,26 +376,71 @@ const Dashboard = () => {
               </div>
               {/* Navigation Stack */}
               <div className="flex flex-col items-center gap-4 text-slate-400/80">
-                <svg className="w-5 h-5 cursor-pointer hover:text-white transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                {/* 1. Home / Dashboard */}
+                <svg 
+                  onClick={() => setShowProfileModal(false)} 
+                  className="w-5 h-5 cursor-pointer hover:text-white transition duration-200" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                  title="Dashboard"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
-                <svg className="w-5 h-5 cursor-pointer hover:text-white transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+
+                {/* 2. New Interview Session */}
+                <svg 
+                  onClick={() => { setShowProfileModal(false); setShowCreate(true); }} 
+                  className="w-5 h-5 cursor-pointer hover:text-white transition duration-200" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                  title="New Interview Prep"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
-                <svg className="w-5 h-5 cursor-pointer hover:text-white transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+
+                {/* 3. Practice Page */}
+                <svg 
+                  onClick={() => { setShowProfileModal(false); navigate("/practice"); }} 
+                  className="w-5 h-5 cursor-pointer hover:text-white transition duration-200" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                  title="AI Practice Mode"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <svg className="w-5 h-5 cursor-pointer hover:text-white transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
             </div>
             
             <div className="flex flex-col items-center gap-4">
-              <svg className="w-5 h-5 text-indigo-400 cursor-pointer hover:text-indigo-300 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              {/* Profile Details */}
+              <svg 
+                onClick={() => setProfileFlow("edit")} 
+                className={`w-5 h-5 cursor-pointer transition duration-200 ${profileFlow === "edit" ? "text-[#f5a623]" : "text-indigo-400 hover:text-indigo-300"}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth="2"
+                title="Edit Details"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <svg onClick={() => setShowProfileModal(false)} className="w-5 h-5 text-red-500 cursor-pointer hover:text-red-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+
+              {/* Logout */}
+              <svg 
+                onClick={handleLogout} 
+                className="w-5 h-5 text-red-500 cursor-pointer hover:text-red-400 transition duration-200" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth="2"
+                title="Logout"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </div>
@@ -330,10 +463,12 @@ const Dashboard = () => {
             <div className="flex flex-col lg:flex-row min-h-[460px]">
               
               {/* 2a. Left Column (User Card) */}
-              <div className="w-full lg:w-[35%] p-8 flex flex-col items-center justify-center text-center shrink-0 border-b lg:border-b-0 lg:border-r border-slate-100">
+              <div className="w-full lg:w-[35%] bg-[#51b29a] p-8 flex flex-col items-center justify-center text-center shrink-0 border-b lg:border-b-0 relative overflow-hidden text-white">
+                {/* Abstract yellow glow */}
+                <div className="absolute -top-12 -left-12 w-24 h-24 bg-[#f5a623]/25 rounded-full blur-xl pointer-events-none" />
                 
                 {/* Circle Profile image */}
-                <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                <div className="relative group cursor-pointer z-10" onClick={() => fileInputRef.current?.click()}>
                   {profileImageUrl ? (
                     <img 
                       src={profileImageUrl} 
@@ -351,28 +486,52 @@ const Dashboard = () => {
                 </div>
 
                 {uploading ? (
-                  <span className="text-[11px] text-slate-400 animate-pulse mt-2 block">Uploading Image...</span>
+                  <span className="text-[11px] text-slate-100 animate-pulse mt-2 block z-10">Uploading Image...</span>
                 ) : (
                   <button 
                     type="button" 
                     onClick={() => fileInputRef.current?.click()}
-                    className="text-[11px] text-indigo-600 font-bold hover:underline cursor-pointer mt-2"
+                    className="text-[11px] text-[#f5a623] hover:text-white font-bold hover:underline cursor-pointer mt-2 z-10 transition"
                     disabled={saving}
                   >
                     Upload Photo
                   </button>
                 )}
 
-                <h2 className="text-2xl font-bold text-slate-800 mt-4 leading-tight">
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleUploadImage} 
+                  className="hidden" 
+                  accept="image/*" 
+                />
+
+                <h2 className="text-2xl font-bold text-slate-800 mt-4 leading-tight z-10">
                   {profileName || "Ashutosh Dash"}
                 </h2>
-                <p className="text-[11px] font-bold text-slate-400 italic uppercase tracking-wider mt-1 select-none">
+                <p className="text-[11px] font-bold text-[#f5a623] italic uppercase tracking-wider mt-1 select-none z-10">
                   STUDENT
                 </p>
                 
-                <div className="text-xs text-slate-400/80 leading-normal max-w-[260px] mt-3 font-medium select-none">
+                <div className="text-xs text-white/95 leading-normal max-w-[260px] mt-3 font-medium select-none z-10">
                   Department of CSA <br />
                   Odisha University of Technology and Research, Ghatikia, Bhubaneswar
+                </div>
+
+                <div className="w-full border-t border-white/20 mt-6 pt-6 flex flex-col items-center select-none z-10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileFlow("deactivate");
+                      setDeactivatePassword("");
+                      setDeactivateOtp("");
+                      setDeactivateTimer(0);
+                    }}
+                    className="bg-black/10 hover:bg-red-600/30 text-rose-100 hover:text-white text-[10px] font-bold px-5 py-2 rounded-full border border-red-400/30 shadow-sm transition transform hover:scale-[1.03] active:scale-95 uppercase tracking-wider cursor-pointer flex items-center gap-1"
+                    disabled={saving || uploading}
+                  >
+                    🗑️ Deactivate Account
+                  </button>
                 </div>
               </div>
 
@@ -382,7 +541,105 @@ const Dashboard = () => {
                   Details
                 </h3>
 
-                {profileFlow === "edit" ? (
+                {profileFlow === "deactivate" ? (
+                  <form onSubmit={handleConfirmDeactivate} className="space-y-4">
+                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl mb-4">
+                      <h4 className="text-sm font-bold text-rose-700 uppercase tracking-wide flex items-center gap-1.5">
+                        ⚠️ Danger Zone
+                      </h4>
+                      <p className="text-xs text-rose-600 mt-1 leading-relaxed">
+                        Deactivating your account is permanent. All of your profile data, interview sessions, history, and records will be deleted forever.
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Password Field */}
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Enter Password</label>
+                        <div className="relative">
+                          <input 
+                            type={showDeactivatePassword ? "text" : "password"}
+                            className="w-full bg-[#e6e8e7] text-xs text-slate-700 font-medium border border-transparent rounded-[10px] pl-3 pr-10 py-2.5 outline-none focus:border-rose-500 transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                            placeholder="Current Password"
+                            value={deactivatePassword}
+                            onChange={({ target }) => setDeactivatePassword(target.value)}
+                            disabled={deactivating}
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowDeactivatePassword(!showDeactivatePassword)}
+                            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                          >
+                            {showDeactivatePassword ? (
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* OTP Input and Request Code */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Verification OTP Code</label>
+                          {deactivateTimer > 0 ? (
+                            <span className="text-[10px] text-slate-400 font-semibold">Resend in {deactivateTimer}s</span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleRequestDeactivateOtp}
+                              className="text-[10px] text-indigo-600 font-bold hover:underline cursor-pointer"
+                              disabled={deactivating}
+                            >
+                              Request OTP Code
+                            </button>
+                          )}
+                        </div>
+                        <input 
+                          type="text"
+                          maxLength="6"
+                          className="w-full bg-[#e6e8e7] text-center text-lg font-bold tracking-[0.25em] text-slate-700 border border-transparent rounded-[10px] px-3 py-2 outline-none focus:border-rose-500 transition placeholder-slate-300 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                          placeholder="000000"
+                          value={deactivateOtp}
+                          onChange={({ target }) => setDeactivateOtp(target.value.replace(/\D/g, ''))}
+                          disabled={deactivating}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                      <button 
+                        type="submit" 
+                        className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-7 py-2.5 rounded-full cursor-pointer shadow-[0_4px_12px_rgba(220,38,38,0.3)] transition transform hover:scale-105 active:scale-95 disabled:opacity-50 select-none uppercase tracking-wide"
+                        disabled={deactivating || !deactivatePassword || deactivateOtp.length !== 6}
+                      >
+                        {deactivating ? "Deactivating..." : "Permanently Deactivate Account"}
+                      </button>
+                      
+                      <button
+                        type="button"
+                        className="text-xs font-bold text-slate-400 hover:text-slate-600 transition"
+                        onClick={() => {
+                          setProfileFlow("edit");
+                          setDeactivatePassword("");
+                          setDeactivateOtp("");
+                          setDeactivateTimer(0);
+                        }}
+                        disabled={deactivating}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : profileFlow === "edit" ? (
                   <form onSubmit={handleRequestUpdateOtp} className="space-y-4">
                     
                     {/* 2x3 Form Details Grid */}
@@ -392,7 +649,7 @@ const Dashboard = () => {
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Full Name</label>
                         <input 
                           type="text"
-                          className="w-full bg-[#f1f3f4] text-xs text-slate-700 font-medium border border-transparent rounded px-3 py-2 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                          className="w-full bg-[#e6e8e7] text-xs text-slate-700 font-medium border border-transparent rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
                           value={profileName}
                           onChange={({ target }) => setProfileName(target.value)}
                           placeholder=""
@@ -405,7 +662,7 @@ const Dashboard = () => {
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Email</label>
                         <input 
                           type="email"
-                          className="w-full bg-[#f1f3f4] text-xs text-slate-700 font-medium border border-transparent rounded px-3 py-2 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                          className="w-full bg-[#e6e8e7] text-xs text-slate-700 font-medium border border-transparent rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
                           value={profileEmail}
                           onChange={({ target }) => setProfileEmail(target.value)}
                           placeholder="name@example.com"
@@ -418,7 +675,7 @@ const Dashboard = () => {
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Phone Number</label>
                         <input 
                           type="text"
-                          className="w-full bg-[#f1f3f4] text-xs text-slate-700 font-medium border border-transparent rounded px-3 py-2 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                          className="w-full bg-[#e6e8e7] text-xs text-slate-700 font-medium border border-transparent rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
                           value={profilePhone}
                           onChange={({ target }) => setProfilePhone(target.value)}
                           placeholder="+91XXXXXXXXXX"
@@ -428,33 +685,21 @@ const Dashboard = () => {
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Academic Year</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Date of Birth</label>
                         <input 
-                          type="text"
-                          className="w-full bg-[#f1f3f4] text-xs text-slate-700 font-medium border border-transparent rounded px-3 py-2 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
-                          value={profileAcademicYear}
-                          onChange={({ target }) => setProfileAcademicYear(target.value)}
-                          placeholder=""
+                          type="date"
+                          className="w-full bg-[#e6e8e7] text-xs text-slate-700 font-medium border border-transparent rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                          value={profileDateOfBirth}
+                          onChange={({ target }) => setProfileDateOfBirth(target.value)}
                           disabled={saving || uploading}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Registration No.</label>
-                        <input 
-                          type="text"
-                          className="w-full bg-[#f1f3f4] text-xs text-slate-700 font-medium border border-transparent rounded px-3 py-2 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
-                          value={profileRegNo}
-                          onChange={({ target }) => setProfileRegNo(target.value)}
-                          placeholder=""
-                          disabled={saving || uploading}
+                          required
                         />
                       </div>
 
                       <div>
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Gender</label>
                         <select
-                          className="w-full bg-[#f1f3f4] text-xs text-slate-700 font-medium border border-transparent rounded px-3 py-2.5 outline-none focus:border-[#51b29a] transition cursor-pointer shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                          className="w-full bg-[#e6e8e7] text-xs text-slate-700 font-medium border border-transparent rounded-[10px] px-3.5 py-3 outline-none focus:border-[#51b29a] transition cursor-pointer shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
                           value={profileGender}
                           onChange={({ target }) => setProfileGender(target.value)}
                           disabled={saving || uploading}
@@ -467,37 +712,40 @@ const Dashboard = () => {
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Blood Group</label>
-                        <select
-                          className="w-full bg-[#f1f3f4] text-xs text-slate-700 font-medium border border-transparent rounded px-3 py-2.5 outline-none focus:border-[#51b29a] transition cursor-pointer shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
-                          value={profileBloodGroup}
-                          onChange={({ target }) => setProfileBloodGroup(target.value)}
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">New Password (leave blank to keep current)</label>
+                        <input 
+                          type="password"
+                          className="w-full bg-[#e6e8e7] text-xs text-slate-700 font-medium border border-transparent rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                          value={profilePassword}
+                          onChange={({ target }) => setProfilePassword(target.value)}
+                          placeholder="New Password"
                           disabled={saving || uploading}
-                        >
-                          <option value="">Select Blood Group</option>
-                          <option value="A+">A+</option>
-                          <option value="A-">A-</option>
-                          <option value="B+">B+</option>
-                          <option value="B-">B-</option>
-                          <option value="AB+">AB+</option>
-                          <option value="AB-">AB-</option>
-                          <option value="O+">O+</option>
-                          <option value="O-">O-</option>
-                        </select>
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Confirm New Password</label>
+                        <input 
+                          type="password"
+                          className="w-full bg-[#e6e8e7] text-xs text-slate-700 font-medium border border-transparent rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                          value={profileConfirmPassword}
+                          onChange={({ target }) => setProfileConfirmPassword(target.value)}
+                          placeholder="Confirm New Password"
+                          disabled={saving || uploading}
+                        />
                       </div>
 
                       <div className="md:col-span-2">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Address</label>
                         <input 
                           type="text"
-                          className="w-full bg-[#f1f3f4] text-xs text-slate-700 font-medium border border-transparent rounded px-3 py-2 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                          className="w-full bg-[#e6e8e7] text-xs text-slate-700 font-medium border border-transparent rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
                           value={profileAddress}
                           onChange={({ target }) => setProfileAddress(target.value)}
                           placeholder=""
                           disabled={saving || uploading}
                         />
                       </div>
-
                     </div>
 
                     {/* Request Save Button */}
@@ -515,8 +763,8 @@ const Dashboard = () => {
                 ) : (
                   <form onSubmit={handleVerifyAndUpdateProfile} className="space-y-6">
                     <p className="text-xs text-slate-500 leading-relaxed">
-                      To save your profile changes, please enter the 6-digit verification code sent to your registered email address:<br />
-                      <strong className="text-slate-700 break-all">{user?.email}</strong>
+                      To save your profile changes, please enter the 6-digit verification code sent to your registered mobile number:<br />
+                      <strong className="text-slate-700 break-all">{user?.phoneNumber}</strong>
                     </p>
 
                     <div className="flex flex-col items-start mb-2 max-w-xs">
@@ -588,10 +836,10 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fffcef]">
+    <div className="min-h-screen bg-transparent">
 
       {/* Navbar */}
-      <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white">
+      <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white/80 backdrop-blur-md sticky top-0 z-30">
         <h1 className="text-xl font-bold text-black">NexInterview</h1>
         <div className="flex items-center gap-6">
           <div 

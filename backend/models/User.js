@@ -25,21 +25,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    academicYear: {
-      type: String,
-      default: "2021-2023",
-    },
-    registrationNo: {
-      type: String,
-      default: "2124100001",
-    },
+
     gender: {
       type: String,
       default: "Male",
     },
-    bloodGroup: {
+    dateOfBirth: {
       type: String,
-      default: "A+",
+      default: "",
     },
     address: {
       type: String,

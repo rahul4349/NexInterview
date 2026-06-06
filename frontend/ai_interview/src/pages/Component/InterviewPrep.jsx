@@ -82,8 +82,8 @@ const InterviewPrep = () => {
   ];
 
   if (loading) return (
-    <div className="min-h-screen bg-[#fffcef]">
-      <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white">
+    <div className="min-h-screen bg-transparent">
+      <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white/80 backdrop-blur-md sticky top-0 z-30">
         <h1 className="text-xl font-bold text-black">NexInterview</h1>
         <button
           onClick={() => navigate("/dashboard")}
@@ -102,10 +102,10 @@ const InterviewPrep = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#fffcef]">
+    <div className="min-h-screen bg-transparent">
 
       {/* Navbar */}
-      <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white">
+      <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white/80 backdrop-blur-md sticky top-0 z-30">
         <h1 className="text-xl font-bold text-black">NexInterview</h1>
         <button
           onClick={() => navigate("/dashboard")}

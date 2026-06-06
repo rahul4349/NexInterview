@@ -1,5 +1,5 @@
 const express = require("express");
-const { registerUser, loginUser, getUserProfile, sendOtp, resetPassword, requestProfileUpdateOtp, updateUserProfile } = require("../controllers/authController");
+const { registerUser, loginUser, getUserProfile, sendOtp, resetPassword, requestProfileUpdateOtp, updateUserProfile, requestDeactivateOtp, deactivateUserProfile } = require("../controllers/authController");
 const { protect } = require("../middlewares/authMiddleware");
 const multer = require("multer");
 const path = require("path");
@@ -37,7 +37,9 @@ router.post("/login", loginUser);
 router.get("/profile", protect, getUserProfile);
 router.post("/profile/update-otp", protect, requestProfileUpdateOtp);
 router.put("/profile/update", protect, updateUserProfile);
-router.post("/upload-image", protect, upload.single("image"), (req, res) => {
+router.post("/profile/deactivate-otp", protect, requestDeactivateOtp);
+router.delete("/profile/deactivate", protect, deactivateUserProfile);
+router.post("/upload-image", upload.single("image"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }

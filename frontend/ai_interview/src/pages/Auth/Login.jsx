@@ -12,6 +12,9 @@ const Login = ({ setCurrentPage }) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Forgot password states
   const [forgotFlow, setForgotFlow] = useState("none"); // "none", "request", "verify"
@@ -186,12 +189,7 @@ const Login = ({ setCurrentPage }) => {
   const renderWrapper = (card) => {
     if (!setCurrentPage) {
       return (
-        <div className="w-full min-h-screen bg-[#a6c4bc] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-          {/* Abstract Yellow Top-Left Shape */}
-          <div className="w-[60vw] h-[60vw] md:w-[32rem] md:h-[32rem] bg-[#f5a623] rounded-full absolute -top-[30vw] -left-[30vw] md:-top-64 md:-left-64 pointer-events-none opacity-95"></div>
-          {/* Abstract Red Bottom-Right Shape */}
-          <div className="w-[60vw] h-[60vw] md:w-[32rem] md:h-[32rem] bg-[#d93c3c] rounded-full absolute -bottom-[30vw] -right-[30vw] md:-bottom-64 md:-right-64 pointer-events-none opacity-95"></div>
-          
+        <div className="w-full min-h-screen bg-transparent flex flex-col items-center justify-center p-4 relative overflow-hidden">
           <div className="z-10 w-full flex justify-center">
             {card}
           </div>
@@ -340,14 +338,30 @@ const Login = ({ setCurrentPage }) => {
                   </svg>
                 </div>
                 <input
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={({ target }) => setNewPassword(target.value)}
-                  className="w-full bg-[#e6e8e7] text-sm text-slate-700 rounded-[10px] pl-10 pr-4 py-2.5 border border-transparent outline-none focus:border-[#51b29a] transition placeholder-slate-400"
+                  className="w-full bg-[#e6e8e7] text-sm text-slate-700 rounded-[10px] pl-10 pr-10 py-2.5 border border-transparent outline-none focus:border-[#51b29a] transition placeholder-slate-400"
                   placeholder="New Password"
                   required
                   disabled={loading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {showNewPassword ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  )}
+                </button>
               </div>
 
               {/* Confirm Password */}
@@ -358,14 +372,30 @@ const Login = ({ setCurrentPage }) => {
                   </svg>
                 </div>
                 <input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={({ target }) => setConfirmPassword(target.value)}
-                  className="w-full bg-[#e6e8e7] text-sm text-slate-700 rounded-[10px] pl-10 pr-4 py-2.5 border border-transparent outline-none focus:border-[#51b29a] transition placeholder-slate-400"
+                  className="w-full bg-[#e6e8e7] text-sm text-slate-700 rounded-[10px] pl-10 pr-10 py-2.5 border border-transparent outline-none focus:border-[#51b29a] transition placeholder-slate-400"
                   placeholder="Confirm Password"
                   required
                   disabled={loading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {showConfirmPassword ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -458,14 +488,30 @@ const Login = ({ setCurrentPage }) => {
                   </svg>
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={({ target }) => { setPassword(target.value); setErrorMsg(""); }}
-                  className="w-full bg-[#e6e8e7] text-sm text-slate-700 rounded-[10px] pl-10 pr-4 py-3 border border-transparent outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+                  className="w-full bg-[#e6e8e7] text-sm text-slate-700 rounded-[10px] pl-10 pr-10 py-3 border border-transparent outline-none focus:border-[#51b29a] transition placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
                   placeholder="Password"
                   required
                   disabled={loading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  )}
+                </button>
               </div>
               <div className="flex justify-end mt-1.5 pr-1">
                 <button

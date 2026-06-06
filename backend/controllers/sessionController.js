@@ -2,6 +2,7 @@ const Session = require("../models/Session");
 const Question = require("../models/Question");
 const Groq = require("groq-sdk");
 const { generateQuestionsPrompt } = require("../utils/prompts");
+const { getFallbackQuestions } = require("../utils/fallbacks");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -15,17 +16,28 @@ const createSession = async (req, res) => {
       return res.status(400).json({ message: "Role, experience and topic to focus are required." });
     }
 
-    const prompt = generateQuestionsPrompt(role, experience, tpoicToFocus, description);
+    let generatedQuestions;
+    try {
+      const prompt = generateQuestionsPrompt(role, experience, tpoicToFocus, description);
 
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.7,
-    });
+      const completion = await groq.chat.completions.create({
+        messages: [{ role: "user", content: prompt }],
+        model: "llama-3.3-70b-versatile",
+        temperature: 0.7,
+      });
 
-    const responseText = completion.choices[0].message.content;
-    const cleanedResponse = responseText.replace(/```json|```/g, "").trim();
-    const generatedQuestions = JSON.parse(cleanedResponse);
+      const responseText = completion.choices[0].message.content;
+      const startIndex = responseText.indexOf("[");
+      const endIndex = responseText.lastIndexOf("]");
+      if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) {
+        throw new Error("No JSON array found in completion content.");
+      }
+      const jsonString = responseText.substring(startIndex, endIndex + 1);
+      generatedQuestions = JSON.parse(jsonString);
+    } catch (apiError) {
+      console.warn("Groq API failed, using fallback questions:", apiError.message);
+      generatedQuestions = getFallbackQuestions(role, experience, tpoicToFocus);
+    }
 
     const session = await Session.create({
       user: req.user._id,
@@ -78,7 +90,7 @@ const getSessionById = async (req, res) => {
     if (!session) {
       return res.status(404).json({ message: "Session not found." });
     }
-    if (session.user.toString() !== req.user._id.toString()) {
+    if (session.user && session.user.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: "Not authorized." });
     }
     res.status(200).json(session);
@@ -94,7 +106,7 @@ const deleteSession = async (req, res) => {
     if (!session) {
       return res.status(404).json({ message: "Session not found." });
     }
-    if (session.user.toString() !== req.user._id.toString()) {
+    if (session.user && session.user.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: "Not authorized." });
     }
     await Question.deleteMany({ session: req.params.id });

@@ -11,19 +11,21 @@ const SgnUp = ({ setCurrentPage }) => {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [academicYear, setAcademicYear] = useState("");
-  const [registrationNo, setRegistrationNo] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("");
-  const [bloodGroup, setBloodGroup] = useState("");
   const [address, setAddress] = useState("");
   const [otp, setOtp] = useState("");
   const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [profileImageUrl, setProfileImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const { updateUser } = useContext(UserContext);
   const navigate = useNavigate();
   const timerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Clean up timer on unmount
   useEffect(() => {
@@ -49,6 +51,27 @@ const SgnUp = ({ setCurrentPage }) => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [resendTimer]);
+
+  const handleUploadImage = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    setUploading(true);
+    try {
+      const res = await axiosInstance.post(API_PATHS.AUTH.UPLOAD_IMAGE, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setProfileImageUrl(res.data.imageUrl);
+      toast.success("Profile picture uploaded successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to upload profile picture.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Request the OTP to be sent to the mobile phone
   const handleRequestOtp = async (e) => {
@@ -79,20 +102,17 @@ const SgnUp = ({ setCurrentPage }) => {
       toast.error("Password must be at least 6 characters.");
       return;
     }
-    if (!academicYear.trim()) {
-      toast.error("Please enter your academic year.");
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
       return;
     }
-    if (!registrationNo.trim()) {
-      toast.error("Please enter your registration number.");
+    if (!dateOfBirth.trim()) {
+      toast.error("Please enter your date of birth.");
       return;
     }
+
     if (!gender.trim()) {
       toast.error("Please enter your gender.");
-      return;
-    }
-    if (!bloodGroup.trim()) {
-      toast.error("Please enter your blood group.");
       return;
     }
     if (!address.trim()) {
@@ -139,10 +159,9 @@ const SgnUp = ({ setCurrentPage }) => {
         email,
         phoneNumber,
         password,
-        academicYear,
-        registrationNo,
+        profileImageUrl,
+        dateOfBirth,
         gender,
-        bloodGroup,
         address,
         otp
       });
@@ -176,12 +195,7 @@ const SgnUp = ({ setCurrentPage }) => {
   const renderWrapper = (card) => {
     if (!setCurrentPage) {
       return (
-        <div className="w-full min-h-screen bg-[#a6c4bc] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-          {/* Abstract Yellow Top-Left Shape */}
-          <div className="w-[60vw] h-[60vw] md:w-[32rem] md:h-[32rem] bg-[#f5a623] rounded-full absolute -top-[30vw] -left-[30vw] md:-top-64 md:-left-64 pointer-events-none opacity-95"></div>
-          {/* Abstract Red Bottom-Right Shape */}
-          <div className="w-[60vw] h-[60vw] md:w-[32rem] md:h-[32rem] bg-[#d93c3c] rounded-full absolute -bottom-[30vw] -right-[30vw] md:-bottom-64 md:-right-64 pointer-events-none opacity-95"></div>
-          
+        <div className="w-full min-h-screen bg-transparent flex flex-col items-center justify-center p-4 relative overflow-hidden">
           <div className="z-10 w-full flex justify-center">
             {card}
           </div>
@@ -313,6 +327,50 @@ const SgnUp = ({ setCurrentPage }) => {
           <p className="text-xs text-slate-400 mt-1 font-medium tracking-wide">Enter your details below to get started</p>
         </div>
 
+        {/* Profile Photo Upload Section */}
+        <div className="flex flex-col items-center mb-4 relative z-10">
+          <div 
+            className="relative group cursor-pointer" 
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {profileImageUrl ? (
+              <img 
+                src={profileImageUrl} 
+                alt="Profile Preview" 
+                className="w-24 h-24 rounded-full object-cover border-4 border-[#51b29a]/40 shadow-sm group-hover:opacity-85 transition" 
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-slate-50 border-4 border-slate-200 flex flex-col items-center justify-center shadow-sm group-hover:bg-slate-100 transition">
+                <span className="text-2xl text-slate-400 font-semibold">+</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">Photo</span>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+              <span className="text-[10px] text-white font-bold tracking-wider uppercase">Upload</span>
+            </div>
+          </div>
+          
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleUploadImage} 
+            className="hidden" 
+            accept="image/*" 
+          />
+
+          {uploading ? (
+            <span className="text-[10px] text-slate-500 animate-pulse mt-1">Uploading...</span>
+          ) : (
+            <button 
+              type="button" 
+              onClick={() => fileInputRef.current?.click()}
+              className="text-[10px] text-[#51b29a] hover:text-[#409b84] font-bold mt-1.5 transition"
+            >
+              {profileImageUrl ? "Change Photo" : "Add Profile Photo"}
+            </button>
+          )}
+        </div>
+
         <form onSubmit={handleRequestOtp}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-2">
             <div className="md:col-span-2">
@@ -357,21 +415,21 @@ const SgnUp = ({ setCurrentPage }) => {
             </div>
             <div>
               <Input
-                value={academicYear}
-                onChange={({ target }) => setAcademicYear(target.value)}
-                label="Academic Year"
+                value={confirmPassword}
+                onChange={({ target }) => setConfirmPassword(target.value)}
+                label="Confirm Password"
                 placeholder=""
-                type="text"
+                type="password"
                 disabled={loading}
               />
             </div>
             <div>
               <Input
-                value={registrationNo}
-                onChange={({ target }) => setRegistrationNo(target.value)}
-                label="Registration No."
+                value={dateOfBirth}
+                onChange={({ target }) => setDateOfBirth(target.value)}
+                label="Date of Birth"
                 placeholder=""
-                type="text"
+                type="date"
                 disabled={loading}
               />
             </div>
@@ -391,27 +449,7 @@ const SgnUp = ({ setCurrentPage }) => {
                 </select>
               </div>
             </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Blood Group</label>
-              <div className="input-box">
-                <select
-                  value={bloodGroup}
-                  onChange={({ target }) => setBloodGroup(target.value)}
-                  disabled={loading}
-                  className="w-full bg-transparent outline-none cursor-pointer text-slate-700 text-sm"
-                >
-                  <option value="">Select Blood Group</option>
-                  <option value="A+">A+</option>
-                  <option value="A-">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B-">B-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB-">AB-</option>
-                  <option value="O+">O+</option>
-                  <option value="O-">O-</option>
-                </select>
-              </div>
-            </div>
+
             <div className="md:col-span-2">
               <Input
                 value={address}

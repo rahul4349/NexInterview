@@ -144,7 +144,68 @@ const Practice = () => {
     }
   };
 
-  // ← Fixed generateFeedback using new endpoint
+  const handleGoBack = () => {
+    setIsRunning(false);
+    clearTimeout(timerRef.current);
+    SpeechRecognition.stopListening();
+
+    if (currentIndex === 0) {
+      if (window.confirm("Are you sure you want to go back to Setup? Your current session progress will be lost.")) {
+        setStep("setup");
+        setAnswers([]);
+        setCurrentIndex(0);
+        setAnswer("");
+        setQuestions([]);
+      } else {
+        setIsRunning(true);
+      }
+      return;
+    }
+
+    const previousIndex = currentIndex - 1;
+    const lastAnswerObj = answers[answers.length - 1];
+    const newAnswers = answers.slice(0, -1);
+
+    setAnswers(newAnswers);
+    setCurrentIndex(previousIndex);
+    setAnswer(lastAnswerObj ? lastAnswerObj.userAnswer : "");
+    setTimeLeft(lastAnswerObj ? timeLimit - lastAnswerObj.timeTaken : timeLimit);
+    setIsRunning(true);
+  };
+
+  const handleSkipInterview = () => {
+    setIsRunning(false);
+    clearTimeout(timerRef.current);
+    SpeechRecognition.stopListening();
+
+    if (answers.length === 0 && !answer.trim()) {
+      if (window.confirm("You haven't answered any questions yet. Are you sure you want to end the session?")) {
+        setStep("setup");
+        setAnswers([]);
+        setCurrentIndex(0);
+        setAnswer("");
+        setQuestions([]);
+      } else {
+        setIsRunning(true);
+      }
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to skip the remaining questions and finish the interview now? We will generate feedback based on your completed answers.")) {
+      let finalAnswers = [...answers];
+      if (answer.trim()) {
+        finalAnswers.push({
+          question: questions[currentIndex]?.question,
+          correctAnswer: questions[currentIndex]?.answer,
+          userAnswer: answer,
+          timeTaken: timeLimit - timeLeft,
+        });
+      }
+      generateFeedback(finalAnswers);
+    } else {
+      setIsRunning(true);
+    }
+  };
   const generateFeedback = async (allAnswers) => {
     setStep("feedback");
     setLoadingFeedback(true);
@@ -175,8 +236,8 @@ const Practice = () => {
   // ─── SETUP STEP ───────────────────────────────────────────
   if (step === "setup") {
     return (
-      <div className="min-h-screen bg-[#fffcef]">
-        <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white">
+      <div className="min-h-screen bg-transparent">
+        <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white/80 backdrop-blur-md sticky top-0 z-30">
           <h1 className="text-xl font-bold text-black">NexInterview</h1>
           <button
             onClick={() => navigate("/dashboard")}
@@ -341,12 +402,20 @@ const Practice = () => {
   // ─── PRACTICE STEP ────────────────────────────────────────
   if (step === "practice") {
     return (
-      <div className="min-h-screen bg-[#fffcef]">
-        <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white">
+      <div className="min-h-screen bg-transparent">
+        <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white/80 backdrop-blur-md sticky top-0 z-30">
           <h1 className="text-xl font-bold text-black">NexInterview</h1>
-          <span className="text-sm text-slate-500">
-            Question {currentIndex + 1} of {questions.length}
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-slate-500 font-medium">
+              Question {currentIndex + 1} of {questions.length}
+            </span>
+            <button
+              onClick={handleSkipInterview}
+              className="text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3.5 py-1.5 rounded-full transition cursor-pointer select-none"
+            >
+              Skip / End Interview 🏁
+            </button>
+          </div>
         </div>
 
         {/* Progress bar */}
@@ -359,7 +428,7 @@ const Practice = () => {
 
         <div className="max-w-3xl mx-auto px-6 py-8">
 
-          {/* Timer */}
+          {/* Timer & Controls */}
           <div className="flex items-center justify-between mb-6">
             <div className={`flex items-center gap-2 text-2xl font-bold ${
               timeLeft < 30 ? "text-red-500" : "text-black"
@@ -370,8 +439,27 @@ const Practice = () => {
 
             <div className="flex gap-3">
               <button
+                onClick={() => {
+                  if (isRunning) {
+                    setIsRunning(false);
+                    SpeechRecognition.stopListening();
+                  } else {
+                    setIsRunning(true);
+                  }
+                }}
+                className={`text-sm px-4 py-2 rounded-full cursor-pointer transition-colors ${
+                  isRunning
+                    ? "border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                    : "bg-green-600 text-white hover:bg-green-500"
+                }`}
+              >
+                {isRunning ? "⏸️ Pause" : "▶️ Resume"}
+              </button>
+
+              <button
                 onClick={handleReadQuestion}
-                className="text-sm border border-amber-200 bg-amber-50 text-amber-700 px-4 py-2 rounded-full cursor-pointer hover:bg-amber-100 transition-colors"
+                disabled={!isRunning}
+                className="text-sm border border-amber-200 bg-amber-50 text-amber-700 px-4 py-2 rounded-full cursor-pointer hover:bg-amber-100 transition-colors disabled:opacity-50"
               >
                 🔊 Read Question
               </button>
@@ -379,7 +467,8 @@ const Practice = () => {
               {browserSupportsSpeechRecognition && useVoice && (
                 <button
                   onClick={toggleVoice}
-                  className={`flex items-center gap-2 text-sm px-4 py-2 rounded-full cursor-pointer transition-colors ${
+                  disabled={!isRunning}
+                  className={`flex items-center gap-2 text-sm px-4 py-2 rounded-full cursor-pointer transition-colors disabled:opacity-50 ${
                     listening
                       ? "bg-red-500 text-white"
                       : "border border-gray-200 text-slate-600 hover:border-amber-300"
@@ -396,13 +485,27 @@ const Practice = () => {
           </div>
 
           {/* Question */}
-          <div className="bg-white border border-amber-100 rounded-xl p-6 shadow-sm mb-6">
-            <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
-              Question {currentIndex + 1}
-            </span>
-            <p className="text-lg font-medium text-black mt-3 leading-relaxed">
-              {questions[currentIndex]?.question}
-            </p>
+          <div className="relative bg-white border border-amber-100 rounded-xl p-6 shadow-sm mb-6 min-h-[120px] flex flex-col justify-center">
+            {!isRunning && (
+              <div className="absolute inset-0 bg-white/90 rounded-xl flex flex-col items-center justify-center z-10 backdrop-blur-[2px]">
+                <span className="text-3xl mb-1">⏸️</span>
+                <p className="text-sm font-bold text-slate-800">Interview Paused</p>
+                <button
+                  onClick={() => setIsRunning(true)}
+                  className="mt-2 bg-green-600 hover:bg-green-500 text-white text-xs font-semibold px-4 py-1.5 rounded-full cursor-pointer transition shadow-sm"
+                >
+                  Resume Interview
+                </button>
+              </div>
+            )}
+            <div>
+              <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                Question {currentIndex + 1}
+              </span>
+              <p className="text-lg font-medium text-black mt-3 leading-relaxed">
+                {questions[currentIndex]?.question}
+              </p>
+            </div>
           </div>
 
           {/* Answer Input */}
@@ -411,7 +514,7 @@ const Practice = () => {
               <label className="text-sm font-medium text-black">
                 Your Answer:
               </label>
-              {useVoice && listening && (
+              {useVoice && listening && isRunning && (
                 <span className="text-xs text-red-500 animate-pulse">
                   🔴 Recording...
                 </span>
@@ -421,27 +524,36 @@ const Practice = () => {
               className="w-full bg-gray-50 text-sm text-slate-700 rounded-lg p-4 outline-none border border-gray-100 focus:border-amber-300 resize-none custom-scrollbar"
               rows={6}
               placeholder={
-                useVoice
-                  ? "Click Speak and start talking..."
-                  : "Type your answer here..."
+                !isRunning 
+                  ? "Interview is paused. Click Resume to write your answer..." 
+                  : (useVoice ? "Click Speak and start talking..." : "Type your answer here...")
               }
               value={answer}
               onChange={({ target }) => {
-                if (!useVoice) setAnswer(target.value);
+                if (!useVoice && isRunning) setAnswer(target.value);
               }}
-              readOnly={useVoice}
+              readOnly={useVoice || !isRunning}
             />
           </div>
 
-          {/* Next Button */}
-          <button
-            onClick={handleNext}
-            className="w-full bg-black text-white text-sm font-medium py-3 rounded-full hover:bg-amber-500 transition-colors cursor-pointer flex items-center justify-center gap-2"
-          >
-            {currentIndex + 1 >= questions.length
-              ? "Finish & Get Feedback 🎯"
-              : "Next Question →"}
-          </button>
+          {/* Action Buttons Grid */}
+          <div className="flex gap-4">
+            <button
+              onClick={handleGoBack}
+              className="flex-1 border border-slate-300 text-slate-700 bg-white/50 hover:bg-white text-sm font-medium py-3 rounded-full transition-colors cursor-pointer flex items-center justify-center gap-2"
+            >
+              ← Go Back
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={!isRunning}
+              className="flex-1 bg-black text-white text-sm font-medium py-3 rounded-full hover:bg-amber-500 transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {currentIndex + 1 >= questions.length
+                ? "Finish & Get Feedback 🎯"
+                : "Next Question →"}
+            </button>
+          </div>
 
         </div>
       </div>
@@ -451,7 +563,7 @@ const Practice = () => {
   // ─── FEEDBACK STEP ────────────────────────────────────────
   if (step === "feedback") {
     if (loadingFeedback) return (
-      <div className="flex items-center justify-center h-screen bg-[#fffcef]">
+      <div className="flex items-center justify-center h-screen bg-transparent">
         <div className="text-center">
           <div className="text-5xl mb-4">📊</div>
           <p className="text-slate-500">Analyzing your performance...</p>
@@ -460,7 +572,7 @@ const Practice = () => {
     );
 
     if (!feedback) return (
-      <div className="flex items-center justify-center h-screen bg-[#fffcef]">
+      <div className="flex items-center justify-center h-screen bg-transparent">
         <div className="text-center">
           <p className="text-slate-500">Could not generate feedback.</p>
           <button
@@ -474,8 +586,8 @@ const Practice = () => {
     );
 
     return (
-      <div className="min-h-screen bg-[#fffcef]">
-        <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white">
+      <div className="min-h-screen bg-transparent">
+        <div className="flex items-center justify-between px-8 py-4 border-b border-amber-100 bg-white/80 backdrop-blur-md sticky top-0 z-30">
           <h1 className="text-xl font-bold text-black">NexInterview</h1>
           <button
             onClick={() => navigate("/dashboard")}
