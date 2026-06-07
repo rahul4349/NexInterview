@@ -96,4 +96,69 @@ const getFallbackQuestions = (role, experience, topics) => {
   }));
 };
 
-module.exports = { getFallbackQuestions };
+const getFallbackFeedback = (answers) => {
+  const questionFeedback = answers.map((a, i) => {
+    const userAnswer = (a.userAnswer || "").trim();
+    const correctAnswer = a.correctAnswer || "";
+    
+    let score = 0;
+    let feedback = "";
+    
+    if (!userAnswer) {
+      score = 0;
+      feedback = "No answer was provided. To improve, try to draft a response even if you are uncertain, drawing on related concepts.";
+    } else {
+      const userWords = new Set(userAnswer.toLowerCase().split(/\W+/));
+      const correctWords = correctAnswer.toLowerCase().split(/\W+/).filter(w => w.length > 4);
+      
+      let matches = 0;
+      correctWords.forEach(w => {
+        if (userWords.has(w)) matches++;
+      });
+      
+      const matchRatio = correctWords.length > 0 ? matches / correctWords.length : 0;
+      
+      if (matchRatio > 0.4 || userAnswer.length > 80) {
+        score = Math.floor(Math.random() * 15) + 80; // 80-95
+        feedback = "Excellent response. You clearly demonstrated understanding of the key concepts and explained them using correct technical terminology. Keep up the great work!";
+      } else if (matchRatio > 0.15 || userAnswer.length > 30) {
+        score = Math.floor(Math.random() * 20) + 60; // 60-79
+        feedback = "Good attempt. You captured some core elements, but the explanation could be more comprehensive. Try to include more specific details and elaborate on practical use cases.";
+      } else {
+        score = Math.floor(Math.random() * 20) + 35; // 35-54
+        feedback = "Partial understanding shown. The response is quite brief. For better results, explain the core mechanism, syntax, and how it contrasts with alternatives.";
+      }
+    }
+    
+    return {
+      question: a.question,
+      score,
+      feedback,
+      userAnswer: a.userAnswer || "No answer provided"
+    };
+  });
+  
+  const answeredCount = answers.filter(a => (a.userAnswer || "").trim().length > 0).length;
+  const totalScore = questionFeedback.reduce((sum, q) => sum + q.score, 0);
+  const overallScore = answers.length > 0 ? Math.round(totalScore / answers.length) : 0;
+  
+  const strengths = [
+    "Demonstrates core logic and structured problem solving.",
+    "Shows active engagement with technical vocabulary and definitions."
+  ];
+  const improvements = [
+    "Provide deeper implementation specifics and concrete examples.",
+    "Practice structural formatting to present complex ideas step-by-step."
+  ];
+  
+  return {
+    overallScore,
+    totalQuestions: answers.length,
+    answeredQuestions: answeredCount,
+    strengths,
+    improvements,
+    questionFeedback
+  };
+};
+
+module.exports = { getFallbackQuestions, getFallbackFeedback };

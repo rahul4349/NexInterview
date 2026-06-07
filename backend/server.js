@@ -10,6 +10,7 @@ const sessionRoutes = require("./routes/sessionRoutes");
 const questionRoutes = require("./routes/questionRoutes");
 const { protect } = require("./middlewares/authMiddleware");
 const { generateInterviewQuestions, generateConceptExplanation } = require("./controllers/aiController");
+const { getFallbackFeedback } = require("./utils/fallbacks");
 
 const app = express();
 const apiKey = process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== "your_groq_api_key" ? process.env.GROQ_API_KEY : "dummy_groq_api_key";
@@ -92,8 +93,14 @@ Return ONLY a valid JSON object with NO extra text, NO markdown, NO explanation:
     res.status(200).json(feedback);
 
   } catch (error) {
-    console.error("Feedback error:", error.message);
-    res.status(500).json({ message: error.message });
+    console.warn("Groq Feedback generation failed, using fallback feedback:", error.message);
+    try {
+      const fallbackFeedback = getFallbackFeedback(answers);
+      res.status(200).json(fallbackFeedback);
+    } catch (fallbackError) {
+      console.error("Fallback feedback error:", fallbackError.message);
+      res.status(500).json({ message: "Failed to generate feedback." });
+    }
   }
 });
 
