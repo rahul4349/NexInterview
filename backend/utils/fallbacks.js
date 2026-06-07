@@ -126,6 +126,86 @@ const getFallbackQuestions = (role, experience, topics, questionCount = 5) => {
     {
       question: `What are the major challenges or limitations you have encountered with ${capitalizedTopic}, and how did you overcome them?`,
       answer: `Key limitations often involve steep learning curves, rendering overheads, or complex state flows. These are overcome through deep architectural planning, community patterns, and optimization plugins.`
+    },
+    {
+      question: `How do you scale an application using ${capitalizedTopic} to handle high traffic or large datasets?`,
+      answer: `Scaling involves horizontal replication, implementing load balancers, optimizing database queries with indexing, using message queues for background processing, and implementing caching layers.`
+    },
+    {
+      question: `How does ${capitalizedTopic} interface with databases or manage persistent storage?`,
+      answer: `${capitalizedTopic} interfaces with databases via ORMs, ODMs, or direct drivers. Persistent storage is managed through connection pooling, transaction locks, and migrations.`
+    },
+    {
+      question: `How do you design clean, reliable APIs or data exchange layers in ${capitalizedTopic}?`,
+      answer: `Clean API design involves adhering to REST or GraphQL standards, validating all request bodies, using proper HTTP status codes, and documenting routes using Swagger or Postman.`
+    },
+    {
+      question: `What is your approach to logging, monitoring, or telemetry in ${capitalizedTopic}?`,
+      answer: `Monitoring involves using structured logging, tracing requests with transaction IDs, tracking error rates via Sentry or Winston, and observing performance metrics through Grafana.`
+    },
+    {
+      question: `How are external dependencies, packages, or libraries managed and audited in ${capitalizedTopic}?`,
+      answer: `Dependencies are managed using package locks, audited regularly for vulnerabilities using npm audit or Snyk, and pinned to specific versions to prevent breaking changes.`
+    },
+    {
+      question: `Explain the caching mechanisms or data reuse strategies available in ${capitalizedTopic}.`,
+      answer: `Caching strategies include HTTP caching, in-memory caching using Redis, caching expensive calculations via local memoization, and distributing resources via CDNs.`
+    },
+    {
+      question: `How does ${capitalizedTopic} manage memory allocation, and how do you prevent memory leaks?`,
+      answer: `Memory is managed via garbage collection or manual reference tracking. Leaks are prevented by cleaning up event listeners, closing database connections, and avoiding global variables.`
+    },
+    {
+      question: `How do you integrate applications built with ${capitalizedTopic} into a CI/CD pipeline for automated testing and deployment?`,
+      answer: `CI/CD integration involves defining workflow files (e.g. GitHub Actions), running automated linting and test suites on push, building artifacts, and deploying to hosting services.`
+    },
+    {
+      question: `How does ${capitalizedTopic} fit into a microservices vs. monolithic architecture?`,
+      answer: `${capitalizedTopic} can act as independent service containers communicating via gRPC/REST in microservices, or run as a single deployment block in a monolithic structure.`
+    },
+    {
+      question: `What accessibility (a11y) or user-standard compliance rules apply to projects built using ${capitalizedTopic}?`,
+      answer: `Compliance involves supporting ARIA labels, semantic HTML tags, keyboard navigation, contrast guidelines, and auditing with Axe-Core or Lighthouse.`
+    },
+    {
+      question: `What is the importance of code documentation and style guides in ${capitalizedTopic} development?`,
+      answer: `Style guides (e.g. ESLint, Prettier) enforce consistent styling. Code documentation (e.g. JSDoc) explains design decisions, API contracts, and guides onboarding.`
+    },
+    {
+      question: `Describe the process of upgrading or migrating a legacy application to the latest version of ${capitalizedTopic}.`,
+      answer: `Migration involves auditing deprecated APIs, running codemods, testing backward compatibility, and incrementally upgrading versions while running full regression test suites.`
+    },
+    {
+      question: `How do developers collaborate on a shared codebase using ${capitalizedTopic} workflows and branching models?`,
+      answer: `Collaboration relies on Git branching (e.g. GitFlow), strict pull request templates, code reviews, automated status checks, and pair programming on complex modules.`
+    },
+    {
+      question: `How do you handle environment-specific configurations (e.g. dev, staging, prod) in ${capitalizedTopic}?`,
+      answer: `Configurations are managed via environment variables (.env files), configuration loaders, and build-time build options to inject staging vs production API keys.`
+    },
+    {
+      question: `What are the latest features or future trends in the ecosystem of ${capitalizedTopic}?`,
+      answer: `Trends focus on zero-bundle size runtimes, server-side streaming, native compilation, integrated dev tools, and tighter integration with AI models.`
+    },
+    {
+      question: `Explain how data integrity, schemas, or type checking is enforced when coding with ${capitalizedTopic}.`,
+      answer: `Integrity is enforced using strict types (TypeScript), runtime validation libraries (Zod, Joi), database schema constraints, and integration test validation.`
+    },
+    {
+      question: `What are the typical deployment targets, hosting providers, or cloud services used for ${capitalizedTopic}?`,
+      answer: `Typical targets include AWS, Vercel, Netlify, Render, Heroku, or Dockerized containers deployed to Kubernetes clusters.`
+    },
+    {
+      question: `How does ${capitalizedTopic} support internationalization (i18n) and localization (l10n)?`,
+      answer: `Support includes using translation dictionaries, date/currency formatting libraries, language routing detection, and RTL layout support.`
+    },
+    {
+      question: `What are some common anti-patterns or code smells in ${capitalizedTopic} that should be avoided?`,
+      answer: `Anti-patterns include bloated components/files, tight coupling of logic, ignoring error states, nested callback hell, and hardcoded secrets.`
+    },
+    {
+      question: `How do you manage version control conflicts or database migrations in a team project using ${capitalizedTopic}?`,
+      answer: `Migrations are managed using CLI tools (Prisma, Knex) with timestamped migration scripts. Git conflicts are resolved using interactive rebase and peer verification.`
     }
   ];
 
