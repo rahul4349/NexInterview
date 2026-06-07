@@ -1,6 +1,7 @@
-const getFallbackQuestions = (role, experience, topics) => {
+const getFallbackQuestions = (role, experience, topics, questionCount = 5) => {
   const normalizedRole = (role || "Developer").trim();
   const normalizedTopics = (topics || "").trim();
+  const count = parseInt(questionCount) || 5;
   
   const topicsList = normalizedTopics.split(",")
     .map(t => t.trim())
@@ -73,20 +74,19 @@ const getFallbackQuestions = (role, experience, topics) => {
     ]
   };
 
+  let baseQuestions = [];
   const lowerTopic = mainTopic.toLowerCase();
   
   if (lowerTopic === "react") {
-    return bank.react;
-  }
-  if (lowerTopic === "node" || lowerTopic === "node.js" || lowerTopic === "backend") {
-    return bank.node;
-  }
-  if (lowerTopic === "javascript" || lowerTopic === "js") {
-    return bank.javascript;
+    baseQuestions = [...bank.react];
+  } else if (lowerTopic === "node" || lowerTopic === "node.js" || lowerTopic === "backend") {
+    baseQuestions = [...bank.node];
+  } else if (lowerTopic === "javascript" || lowerTopic === "js") {
+    baseQuestions = [...bank.javascript];
   }
 
   const capitalizedTopic = mainTopic.charAt(0).toUpperCase() + mainTopic.slice(1);
-  return [
+  const dynamicTemplates = [
     {
       question: `What is the core purpose of ${capitalizedTopic}, and what are the key architectural patterns or principles it introduces?`,
       answer: `${capitalizedTopic} is primarily used to solve architectural and implementation challenges. It introduces clean patterns for structuring code, separating concerns, and optimizing resources. Key principles include scalability, reusability, and maintainability.`
@@ -106,8 +106,40 @@ const getFallbackQuestions = (role, experience, topics) => {
     {
       question: `Explain how you would write unit tests or debug errors in an application using ${capitalizedTopic}.`,
       answer: `Testing is done using framework-specific assertions, mocking external APIs, and checking boundary conditions. Debugging relies on developer tools, inspector terminals, logging stacks, and step-by-step code execution.`
+    },
+    {
+      question: `What are the industry best practices for securing applications built using ${capitalizedTopic}?`,
+      answer: `Security best practices include sanitizing all inputs to prevent injection attacks, implementing robust authentication/authorization, encrypting sensitive data, and regularly auditing dependencies.`
+    },
+    {
+      question: `How do you handle error boundaries, exception bubbling, or graceful degradation in ${capitalizedTopic}?`,
+      answer: `Errors are managed using try-catch blocks, global error handlers, or framework-specific error boundaries. It is crucial to log errors and present a user-friendly fallback UI.`
+    },
+    {
+      question: `Compare the synchronous vs. asynchronous behavior in ${capitalizedTopic} and explain when to use each.`,
+      answer: `Synchronous operations block execution until complete, ideal for simple in-memory tasks. Asynchronous operations run non-blockingly, essential for network calls, file system tasks, or timer functions.`
+    },
+    {
+      question: `Explain how dependency injection, modularization, or package management is structured in ${capitalizedTopic}.`,
+      answer: `Modularization is achieved by splitting code into reusable packages or files. Dependency injection handles passing services to components, reducing coupling and improving testability.`
+    },
+    {
+      question: `What are the major challenges or limitations you have encountered with ${capitalizedTopic}, and how did you overcome them?`,
+      answer: `Key limitations often involve steep learning curves, rendering overheads, or complex state flows. These are overcome through deep architectural planning, community patterns, and optimization plugins.`
     }
   ];
+
+  let result = [...baseQuestions];
+  let templateIndex = 0;
+  while (result.length < count && templateIndex < dynamicTemplates.length) {
+    const template = dynamicTemplates[templateIndex];
+    if (!result.some(q => q.question === template.question)) {
+      result.push(template);
+    }
+    templateIndex++;
+  }
+
+  return result.slice(0, count);
 };
 
 const getFallbackFeedback = (answers) => {

@@ -94,6 +94,7 @@ const Practice = () => {
         role: finalRole,
         experience,
         tpoicToFocus: topicToFocus,
+        questionCount,
         description: `Generate ${questionCount} questions`,
       });
       const qList = res.data.questions.slice(0, questionCount);

@@ -9,7 +9,7 @@ const groq = new Groq({ apiKey });
 
 const createSession = async (req, res) => {
   try {
-    const { role, experience, tpoicToFocus, description } = req.body;
+    const { role, experience, tpoicToFocus, description, questionCount } = req.body;
 
     console.log("Body received:", req.body);
 
@@ -19,7 +19,7 @@ const createSession = async (req, res) => {
 
     let generatedQuestions;
     try {
-      const prompt = generateQuestionsPrompt(role, experience, tpoicToFocus, description);
+      const prompt = generateQuestionsPrompt(role, experience, tpoicToFocus, description, questionCount);
 
       const completion = await groq.chat.completions.create({
         messages: [{ role: "user", content: prompt }],
@@ -37,7 +37,7 @@ const createSession = async (req, res) => {
       generatedQuestions = JSON.parse(jsonString);
     } catch (apiError) {
       console.warn("Groq API failed, using fallback questions:", apiError.message);
-      generatedQuestions = getFallbackQuestions(role, experience, tpoicToFocus);
+      generatedQuestions = getFallbackQuestions(role, experience, tpoicToFocus, questionCount);
     }
 
     const session = await Session.create({

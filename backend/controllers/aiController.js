@@ -7,7 +7,7 @@ const groq = new Groq({ apiKey });
 
 const generateInterviewQuestions = async (req, res) => {
   try {
-    const { role, experience, tpoicToFocus, description } = req.body;
+    const { role, experience, tpoicToFocus, description, questionCount } = req.body;
 
     console.log("Body:", req.body);
 
@@ -17,7 +17,7 @@ const generateInterviewQuestions = async (req, res) => {
 
     let questions;
     try {
-      const prompt = generateQuestionsPrompt(role, experience, tpoicToFocus, description);
+      const prompt = generateQuestionsPrompt(role, experience, tpoicToFocus, description, questionCount);
 
       const completion = await groq.chat.completions.create({
         messages: [{ role: "user", content: prompt }],
@@ -35,7 +35,7 @@ const generateInterviewQuestions = async (req, res) => {
       questions = JSON.parse(jsonString);
     } catch (apiError) {
       console.warn("Groq API failed, using fallback questions:", apiError.message);
-      questions = getFallbackQuestions(role, experience, tpoicToFocus);
+      questions = getFallbackQuestions(role, experience, tpoicToFocus, questionCount);
     }
 
     res.status(200).json({ questions });

@@ -1,5 +1,5 @@
-const generateQuestionsPrompt = (role, experience, topicsToFocus, description) => `
-You are an expert technical interviewer. Generate 10 high-quality interview questions and detailed answers for the following candidate profile:
+const generateQuestionsPrompt = (role, experience, topicsToFocus, description, questionCount = 5) => `
+You are an expert technical interviewer. Generate ${questionCount} high-quality interview questions and detailed answers for the following candidate profile:
 
 Role: ${role}
 Experience Level: ${experience}
