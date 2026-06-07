@@ -95,7 +95,7 @@ Return ONLY a valid JSON object with NO extra text, NO markdown, NO explanation:
   } catch (error) {
     console.warn("Groq Feedback generation failed, using fallback feedback:", error.message);
     try {
-      const fallbackFeedback = getFallbackFeedback(answers);
+      const fallbackFeedback = getFallbackFeedback(req.body.answers || []);
       res.status(200).json(fallbackFeedback);
     } catch (fallbackError) {
       console.error("Fallback feedback error:", fallbackError.message);
