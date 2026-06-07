@@ -96,7 +96,16 @@ const Practice = () => {
         tpoicToFocus: topicToFocus,
         description: `Generate ${questionCount} questions`,
       });
-      setQuestions(res.data.questions.slice(0, questionCount));
+      const qList = res.data.questions.slice(0, questionCount);
+      setQuestions(qList);
+      setAnswers(
+        qList.map((q) => ({
+          question: q.question,
+          correctAnswer: q.answer,
+          userAnswer: "",
+          timeTaken: 0,
+        }))
+      );
       setTimeLeft(timeLimit);
       setStep("practice");
       setIsRunning(true);
@@ -122,24 +131,23 @@ const Practice = () => {
     clearTimeout(timerRef.current);
     SpeechRecognition.stopListening();
 
-    const newAnswers = [
-      ...answers,
-      {
-        question: questions[currentIndex]?.question,
-        correctAnswer: questions[currentIndex]?.answer,
-        userAnswer: answer,
-        timeTaken: timeLimit - timeLeft,
-      },
-    ];
+    const newAnswers = [...answers];
+    newAnswers[currentIndex] = {
+      question: questions[currentIndex]?.question,
+      correctAnswer: questions[currentIndex]?.answer,
+      userAnswer: answer,
+      timeTaken: timeLimit - timeLeft,
+    };
     setAnswers(newAnswers);
-    setAnswer("");
-    resetTranscript();
-    setTimeLeft(timeLimit);
 
     if (currentIndex + 1 >= questions.length) {
       generateFeedback(newAnswers);
     } else {
-      setCurrentIndex((i) => i + 1);
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setAnswer(newAnswers[nextIndex]?.userAnswer || "");
+      resetTranscript();
+      setTimeLeft(timeLimit);
       setIsRunning(true);
     }
   };
@@ -162,14 +170,20 @@ const Practice = () => {
       return;
     }
 
-    const previousIndex = currentIndex - 1;
-    const lastAnswerObj = answers[answers.length - 1];
-    const newAnswers = answers.slice(0, -1);
-
+    const newAnswers = [...answers];
+    newAnswers[currentIndex] = {
+      question: questions[currentIndex]?.question,
+      correctAnswer: questions[currentIndex]?.answer,
+      userAnswer: answer,
+      timeTaken: timeLimit - timeLeft,
+    };
     setAnswers(newAnswers);
+
+    const previousIndex = currentIndex - 1;
     setCurrentIndex(previousIndex);
-    setAnswer(lastAnswerObj ? lastAnswerObj.userAnswer : "");
-    setTimeLeft(lastAnswerObj ? timeLimit - lastAnswerObj.timeTaken : timeLimit);
+    setAnswer(newAnswers[previousIndex]?.userAnswer || "");
+    resetTranscript();
+    setTimeLeft(timeLimit);
     setIsRunning(true);
   };
 
@@ -178,7 +192,8 @@ const Practice = () => {
     clearTimeout(timerRef.current);
     SpeechRecognition.stopListening();
 
-    if (answers.length === 0 && !answer.trim()) {
+    const answeredCount = answers.filter(a => a.userAnswer && a.userAnswer.trim()).length + (answer.trim() ? 1 : 0);
+    if (answeredCount === 0) {
       if (window.confirm("You haven't answered any questions yet. Are you sure you want to end the session?")) {
         setStep("setup");
         setAnswers([]);
@@ -192,15 +207,14 @@ const Practice = () => {
     }
 
     if (window.confirm("Are you sure you want to skip the remaining questions and finish the interview now? We will generate feedback based on your completed answers.")) {
-      let finalAnswers = [...answers];
-      if (answer.trim()) {
-        finalAnswers.push({
-          question: questions[currentIndex]?.question,
-          correctAnswer: questions[currentIndex]?.answer,
-          userAnswer: answer,
-          timeTaken: timeLimit - timeLeft,
-        });
-      }
+      const finalAnswers = [...answers];
+      finalAnswers[currentIndex] = {
+        question: questions[currentIndex]?.question,
+        correctAnswer: questions[currentIndex]?.answer,
+        userAnswer: answer,
+        timeTaken: timeLimit - timeLeft,
+      };
+      setAnswers(finalAnswers);
       generateFeedback(finalAnswers);
     } else {
       setIsRunning(true);

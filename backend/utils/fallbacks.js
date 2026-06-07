@@ -1,6 +1,12 @@
 const getFallbackQuestions = (role, experience, topics) => {
-  const normalizedRole = (role || "").toLowerCase();
-  const normalizedTopics = (topics || "").toLowerCase();
+  const normalizedRole = (role || "Developer").trim();
+  const normalizedTopics = (topics || "").trim();
+  
+  const topicsList = normalizedTopics.split(",")
+    .map(t => t.trim())
+    .filter(Boolean);
+  
+  const mainTopic = topicsList[0] || normalizedTopics || "Software Development";
 
   const bank = {
     react: [
@@ -64,36 +70,44 @@ const getFallbackQuestions = (role, experience, topics) => {
         question: "How does error handling work in asynchronous Express.js routes?",
         answer: "In asynchronous Express handlers, errors must be caught (using try-catch) and passed to the next() middleware function. Express has a default error handler, but custom error-handling middleware can be defined with four arguments (err, req, res, next) to log and format error responses gracefully."
       }
-    ],
-    generic: [
-      {
-        question: "What are the key responsibilities of a developer in a team environment, and how do you ensure high code quality?",
-        answer: "Responsibilities include writing clean, maintainable, and well-documented code, participating in peer code reviews, collaborating with cross-functional teams, and contributing to tests. Ensuring quality involves following style guides, automated testing, continuous integration, and keeping up with refactoring."
-      },
-      {
-        question: "How do you debug a performance bottleneck in a web application?",
-        answer: "First, measure performance using tools like Chrome DevTools Performance/Lighthouse (frontend) or APM profiling tools (backend). Identify blocking operations (long-running JavaScript, unoptimized database queries, asset payloads). Implement solutions like caching, pagination, code-splitting, lazy loading, and database indexing, then measure again to verify improvements."
-      },
-      {
-        question: "Describe your approach to writing clean, maintainable code.",
-        answer: "I follow SOLID principles, write descriptive names for variables and functions, keep functions small and focused on a single responsibility, write unit tests, and limit comments to explaining 'why' rather than 'what'. I also participate in code reviews and use linting/formatting tools."
-      }
     ]
   };
 
-  let selected = bank.generic;
-  if (normalizedRole.includes("react") || normalizedTopics.includes("react")) {
-    selected = bank.react;
-  } else if (normalizedRole.includes("node") || normalizedTopics.includes("node") || normalizedRole.includes("backend")) {
-    selected = bank.node;
-  } else if (normalizedRole.includes("javascript") || normalizedTopics.includes("javascript") || normalizedRole.includes("frontend")) {
-    selected = bank.javascript;
+  const lowerTopic = mainTopic.toLowerCase();
+  
+  if (lowerTopic === "react") {
+    return bank.react;
+  }
+  if (lowerTopic === "node" || lowerTopic === "node.js" || lowerTopic === "backend") {
+    return bank.node;
+  }
+  if (lowerTopic === "javascript" || lowerTopic === "js") {
+    return bank.javascript;
   }
 
-  return selected.map((q) => ({
-    question: q.question,
-    answer: q.answer
-  }));
+  const capitalizedTopic = mainTopic.charAt(0).toUpperCase() + mainTopic.slice(1);
+  return [
+    {
+      question: `What is the core purpose of ${capitalizedTopic}, and what are the key architectural patterns or principles it introduces?`,
+      answer: `${capitalizedTopic} is primarily used to solve architectural and implementation challenges. It introduces clean patterns for structuring code, separating concerns, and optimizing resources. Key principles include scalability, reusability, and maintainability.`
+    },
+    {
+      question: `Can you explain how state, configuration, or data binding is managed when working with ${capitalizedTopic}?`,
+      answer: `Data and configurations in ${capitalizedTopic} are typically managed via central state stores, configuration managers, or props. This ensures a single source of truth, deterministic rendering, and clear data flows.`
+    },
+    {
+      question: `What are some common lifecycle events, hooks, or phases associated with ${capitalizedTopic}, and how do you handle side effects?`,
+      answer: `Lifecycle phases include setup, execution, and cleanup. Side effects (such as data fetching or subscriptions) are managed within dedicated event handlers or lifecycle callbacks, ensuring they don't block main threads.`
+    },
+    {
+      question: `How does ${capitalizedTopic} address application performance, and what are some best practices to optimize it?`,
+      answer: `Performance optimization in ${capitalizedTopic} involves minification, lazy loading, caching computational tasks (memoization), reducing unneeded render cycles, and ensuring efficient database indexes or API payloads.`
+    },
+    {
+      question: `Explain how you would write unit tests or debug errors in an application using ${capitalizedTopic}.`,
+      answer: `Testing is done using framework-specific assertions, mocking external APIs, and checking boundary conditions. Debugging relies on developer tools, inspector terminals, logging stacks, and step-by-step code execution.`
+    }
+  ];
 };
 
 const getFallbackFeedback = (answers) => {
